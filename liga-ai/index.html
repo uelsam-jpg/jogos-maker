@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liga Aí!</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Silkscreen&family=Lexend:wght@400;500;700&display=swap">
+<style>
+/* Layout: placa de circuito impresso. Máscara verde, trilhas de cobre, serigrafia branca e LEDs de verdade. */
+:root {
+  color-scheme: dark;
+  --placa: #0C5A3C;
+  --placa-escura: #083F2A;
+  --placa-clara: #127350;
+  --cobre: #D79A4A;
+  --ouro: #FFD166;
+  --serigrafia: #F2F7F1;
+  --suave: #B6D6C4;
+  --led: #FFE14D;
+  --vermelho: #FF5C5C;
+  --verde-led: #58F29B;
+  --noite: #0D1B2F;
+  --display: "Bungee", Impact, sans-serif;
+  --etiqueta: "Silkscreen", "Courier New", monospace;
+  --texto: "Lexend", "Segoe UI", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background-color: var(--placa-escura);
+  background-image: radial-gradient(circle, rgba(215, 154, 74, .55) 2px, transparent 2.5px), linear-gradient(90deg, rgba(215, 154, 74, .13) 2px, transparent 2px), linear-gradient(rgba(215, 154, 74, .13) 2px, transparent 2px);
+  background-size: 96px 96px, 192px 96px, 96px 192px;
+  color: var(--serigrafia);
+  font: 400 1.03rem/1.55 var(--texto);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 40px;
+}
+#app { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3, p { margin: 0; }
+h2 { font: 400 clamp(1.45rem, 5vw, 2.15rem)/1.15 var(--display); text-wrap: balance; }
+h3 { font: 400 1.05rem/1.2 var(--display); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--ouro); outline-offset: 2px; }
+
+.modulo { position: relative; background: var(--placa); border: 2px solid var(--serigrafia); border-radius: 4px; padding: clamp(16px, 4vw, 28px); display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.modulo::before, .modulo::after { content: ""; position: absolute; top: 8px; width: 11px; height: 11px; border-radius: 50%; background: var(--placa-escura); border: 2px solid var(--cobre); }
+.modulo::before { left: 8px; }
+.modulo::after { right: 8px; }
+.etiqueta { font: 400 .78rem/1.35 var(--etiqueta); color: var(--suave); }
+.bt { min-height: 50px; padding: 10px 20px; border: 2px solid var(--serigrafia); border-radius: 4px; background: transparent; font: 400 .92rem/1.15 var(--display); transition: background .1s, transform .07s; }
+.bt:hover:not(:disabled) { background: var(--placa-clara); }
+.bt:active:not(:disabled) { transform: translateY(2px); }
+.bt:disabled { opacity: .45; cursor: not-allowed; }
+.bt.liga { background: var(--led); border-color: var(--led); color: #1A2410; box-shadow: 0 0 18px rgba(255, 225, 77, .5); }
+.bt.liga:hover:not(:disabled) { background: #FFEB85; }
+.linha { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.linha.fim { justify-content: flex-end; }
+
+.logo { font: 400 clamp(2.6rem, 12vw, 5.4rem)/1 var(--display); color: var(--led); text-shadow: 0 0 22px rgba(255, 225, 77, .75); overflow-wrap: anywhere; }
+.logo.menor { font-size: clamp(1.5rem, 7vw, 2.8rem); }
+.sub { font: 500 1.08rem/1.35 var(--texto); }
+.inicio { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 150px; }
+.campo label { font: 400 .8rem/1.2 var(--etiqueta); }
+.campo input { min-height: 48px; width: 100%; padding: 8px 12px; border: 2px solid var(--suave); border-radius: 4px; background: var(--placa-escura); font: 500 1.03rem/1.2 var(--texto); }
+.campo input::placeholder { color: var(--suave); }
+.aviso { border: 1px dashed var(--suave); padding: 9px 11px; font-size: .88rem; }
+.erro { color: #FFD0D0; font-weight: 700; min-height: 1.5em; font-size: .92rem; }
+.formulario { display: flex; flex-direction: column; gap: 12px; }
+.niveis { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 112px), 1fr)); gap: 7px; }
+.niveis legend { font: 400 .8rem/1.2 var(--etiqueta); padding: 0 0 5px; }
+.nivel { display: flex; gap: 7px; align-items: flex-start; padding: 7px 9px; border: 2px solid var(--suave); border-radius: 4px; cursor: pointer; }
+.nivel:has(input:checked) { border-color: var(--led); background: var(--placa-escura); }
+.nivel input { margin: 4px 0 0; accent-color: var(--led); }
+.nivel span { display: flex; flex-direction: column; min-width: 0; }
+.nivel b { font: 700 .92rem/1.2 var(--texto); }
+.nivel small { font-size: .74rem; line-height: 1.25; color: var(--suave); }
+
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font: 400 .8rem/1.2 var(--etiqueta); padding: 2px; }
+.barra strong { font: 400 1.15rem/1 var(--display); color: var(--led); font-variant-numeric: tabular-nums; }
+.barra .esp { flex: 1; }
+.barra button { min-height: 38px; padding: 4px 10px; background: var(--placa-escura); border: 1px solid var(--suave); border-radius: 4px; font: 400 .74rem/1 var(--etiqueta); }
+
+/* Escola no apagão */
+.escola { display: block; width: 100%; height: auto; background: var(--noite); border-radius: 3px; }
+.escola .predio { fill: #24344B; }
+.escola .telhado { fill: #182536; }
+.escola .porta { fill: #111C2B; }
+.escola .jan { fill: #0B1320; stroke: #3F5472; stroke-width: 2; transition: fill .5s; }
+.escola .jan.acesa { fill: var(--led); filter: drop-shadow(0 0 7px var(--led)); }
+.escola text { font: 400 8.5px var(--etiqueta); fill: #9FB2CD; }
+.escola .estrela { fill: #E8EEF8; }
+
+.fases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 9px; }
+.fase { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 2px 10px; text-align: left; padding: 11px; border: 2px solid var(--serigrafia); border-radius: 4px; background: var(--placa-escura); }
+.fase:hover:not(:disabled) { background: var(--placa-clara); }
+.fase:disabled { border-style: dashed; opacity: .55; cursor: not-allowed; }
+.fase .lamp { grid-row: 1 / span 3; align-self: center; width: 22px; height: 22px; border-radius: 50%; margin: auto; background: #233; border: 2px solid var(--suave); }
+.fase .lamp.ok { background: var(--led); border-color: var(--led); box-shadow: 0 0 12px var(--led); }
+.fase .tg { font: 400 .76rem/1.3 var(--texto); color: var(--suave); }
+.fase .pe { display: flex; justify-content: space-between; gap: 8px; font: 400 .72rem/1.3 var(--etiqueta); }
+.estrelas { color: var(--led); letter-spacing: .08em; }
+
+.leitura { display: flex; flex-direction: column; gap: 11px; max-width: 66ch; }
+.destaque { color: var(--led); font-weight: 700; }
+.curiosidade { border: 2px solid var(--cobre); padding: 9px 12px; }
+
+.como { font-size: .92rem; color: var(--suave); }
+.grande { min-height: 66px; min-width: 190px; font-size: 1.2rem; touch-action: manipulation; }
+.fileira { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 7px; }
+.bulbo { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 76px; padding: 8px 2px; background: var(--placa-escura); border: 2px solid var(--suave); border-radius: 4px; font: 400 .8rem/1 var(--etiqueta); }
+.bulbo i { width: 28px; height: 28px; border-radius: 50%; background: #233; border: 2px solid var(--suave); }
+.bulbo:hover:not(:disabled) { border-color: var(--led); }
+.bulbo.passa i { background: var(--led); border-color: var(--led); box-shadow: 0 0 12px var(--led); }
+.bulbo.corta { opacity: .6; }
+.bulbo.achada { opacity: 1; border-color: var(--vermelho); }
+.bulbo.achada i { background: var(--vermelho); border-color: var(--vermelho); }
+.pista { position: relative; height: 84px; overflow: hidden; background: repeating-linear-gradient(90deg, #17324A 0 22px, #122739 22px 44px); border-block: 4px solid var(--cobre); }
+.item { position: absolute; top: 15px; left: 0; padding: 12px 14px; background: var(--serigrafia); color: #123; border-radius: 4px; font-weight: 700; white-space: nowrap; line-height: 1; }
+.item.bom { background: var(--verde-led); }
+.item.ruim { background: var(--vermelho); }
+@keyframes passa { from { left: -30%; } to { left: 100%; } }
+.caixas { display: grid; grid-template-columns: repeat(var(--c), minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.caixa { min-height: 72px; padding: 6px; background: var(--placa-escura); border: 2px solid var(--led); border-radius: 4px; font: 400 clamp(.74rem, 2.6vw, .95rem)/1.1 var(--display); overflow-wrap: anywhere; }
+.caixa:hover { background: var(--placa-clara); }
+.corpo-jogo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; max-width: 420px; margin-inline: auto; }
+.orgao { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 96px; background: var(--placa-escura); border: 2px solid var(--suave); border-radius: 4px; font-weight: 500; transition: background .08s, box-shadow .08s; }
+.orgao b { font-size: 1.9rem; line-height: 1; font-weight: 400; }
+.orgao.ativo { background: var(--led); border-color: var(--led); color: #1A2410; box-shadow: 0 0 22px var(--led); }
+.ceu { display: block; width: min(100%, 320px); margin: 0 auto 10px; background: var(--noite); border-radius: 50%; }
+/* O circuito */
+.circuito { --n: 5; display: grid; grid-template-columns: 30px repeat(var(--n), minmax(0, 1fr)) 34px; gap: 3px; max-width: 500px; width: 100%; margin-inline: auto; touch-action: manipulation; }
+.ponta { display: grid; place-items: center; align-self: stretch; }
+.bateria { width: 26px; height: 46px; background: linear-gradient(90deg, var(--cobre), #1B1B1B 40%); border-radius: 3px; display: grid; place-items: center; font: 400 .7rem/1 var(--etiqueta); color: var(--ouro); }
+.lampada { width: 30px; height: 30px; border-radius: 50%; background: #233; border: 2px solid var(--suave); }
+.lampada.acesa { background: var(--led); border-color: var(--led); box-shadow: 0 0 22px 6px rgba(255, 225, 77, .85); }
+.peca { position: relative; aspect-ratio: 1; padding: 0; border: 0; border-radius: 3px; background: var(--placa-escura); min-width: 0; }
+.peca:hover:not(:disabled) { background: #0A4B33; }
+.peca:disabled { cursor: default; }
+.peca svg { display: block; width: 100%; height: 100%; transition: transform .14s; }
+.peca .trilha { fill: none; stroke: var(--cobre); stroke-width: 15; stroke-linecap: square; }
+.peca.viva .trilha { stroke: var(--led); filter: drop-shadow(0 0 3px var(--led)); }
+.peca .chave { position: absolute; inset: 22%; display: grid; place-items: center; background: var(--placa); border: 2px solid var(--serigrafia); border-radius: 50%; font: 400 .9rem/1 var(--display); color: var(--serigrafia); pointer-events: none; }
+.peca.viva .chave { border-color: var(--led); color: var(--led); }
+.peca .chave.fechada { background: var(--verde-led); border-color: var(--verde-led); color: #063; }
+.peca .chave.queimada { background: var(--vermelho); border-color: var(--vermelho); color: #300; }
+.estado { min-height: 1.5em; text-align: center; font-weight: 500; font-size: .95rem; }
+
+.enunciado { font: 700 clamp(1.08rem, 3.2vw, 1.28rem)/1.4 var(--texto); text-wrap: pretty; }
+.opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 8px; }
+.op { min-height: 52px; padding: 9px 13px; text-align: left; background: var(--placa-escura); border: 2px solid var(--suave); border-radius: 4px; line-height: 1.3; font-size: .96rem; }
+.op:hover:not(:disabled) { border-color: var(--led); }
+.op:disabled { cursor: default; color: var(--serigrafia); }
+.op.certa { background: var(--verde-led); border-color: var(--verde-led); color: #042A17; font-weight: 700; }
+.op.certa::before { content: "✓ "; }
+.op.errada { background: var(--vermelho); border-color: var(--vermelho); color: #2B0505; font-weight: 700; }
+.op.errada::before { content: "✗ "; }
+.op.apagada { opacity: .45; }
+.retorno { border: 2px solid var(--led); padding: 11px 13px; display: flex; flex-direction: column; gap: 8px; font-size: .96rem; }
+.retorno b { color: var(--led); }
+.tempo { height: 10px; border: 1px solid var(--serigrafia); }
+.tempo div { height: 100%; background: var(--led); transition: width .25s linear; }
+.modal { position: fixed; inset: 0; z-index: 20; overflow-y: auto; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); background: rgba(3, 25, 16, .82); }
+.modal .modulo { max-width: 620px; margin: 0 auto; }
+
+.placar { font: 400 clamp(2.5rem, 10vw, 4rem)/1 var(--display); color: var(--led); font-variant-numeric: tabular-nums; }
+.grandes { font-size: 1.8rem; letter-spacing: .1em; color: var(--led); }
+.abas { display: flex; flex-wrap: wrap; gap: 8px; }
+.abas button { min-height: 42px; padding: 6px 12px; background: transparent; border: 2px solid var(--suave); border-radius: 4px; font: 400 .78rem/1 var(--etiqueta); }
+.abas button[aria-pressed="true"] { background: var(--led); border-color: var(--led); color: #1A2410; }
+.tab { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.tab li { display: grid; grid-template-columns: 2.3em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 8px 10px; background: var(--placa-escura); border-radius: 3px; }
+.tab li.eu { outline: 2px solid var(--led); }
+.tab .pos { font: 400 .95rem/1 var(--display); color: var(--ouro); }
+.tab .nm { overflow-wrap: anywhere; font-weight: 500; }
+.tab small { color: var(--suave); font: 400 .68rem/1 var(--etiqueta); }
+.tab .pt { font: 400 1rem/1 var(--display); font-variant-numeric: tabular-nums; }
+@media (max-width: 680px) {
+  .inicio { grid-template-columns: minmax(0, 1fr); }
+  .escola.topo { max-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script>
+"use strict";
+/* ---------- CONTEÚDO DO JOGO: a primeira opção de cada pergunta é a certa; o jogo embaralha ---------- */
+const Q = (q, o, p) => ({ q, o, a: 0, p });
+const BANCO = {
+  metodo: [
+    Q("O que é uma hipótese?", ["Uma explicação que pode ser testada", "Uma verdade que nunca muda", "Um resultado já comprovado", "Uma opinião sem relação com o problema"], "A hipótese é uma resposta provisória. O experimento mostra se ela se sustenta."),
+    Q("Você quer saber se a luz ajuda o feijão a crescer. O que deve mudar entre os dois vasos?", ["Só a quantidade de luz", "A luz, a água e o tipo de terra", "Só o nome dos vasos", "Tudo, para ver o que acontece"], "Mudamos uma coisa de cada vez. Assim sabemos o que causou a diferença."),
+    Q("Por que repetir um experimento várias vezes?", ["Para saber se o resultado se mantém", "Para gastar mais material", "Para escolher o resultado preferido", "Porque a primeira vez nunca vale"], "A repetição reduz a chance de o resultado ter sido por acaso."),
+    Q("O teste deu resultado diferente da sua hipótese. Isso é:", ["Uma informação útil para revisar a ideia", "Um motivo para esconder os dados", "Um sinal de que a ciência não funciona", "Um motivo para mudar os números"], "Hipóteses recusadas fazem parte da ciência e levam a novas perguntas."),
+    Q("Qual destas frases é uma observação?", ["A planta do vaso A cresceu 5 cm", "A planta do vaso A é a mais bonita", "Toda planta gosta de música", "Essa planta deve ser feliz"], "Observação descreve o que foi percebido ou medido, sem julgamento."),
+    Q("Para que serve um grupo de controle?", ["Comparar com o que recebeu o teste", "Vigiar os alunos da turma", "Fazer o experimento durar mais", "Evitar anotar os resultados"], "Sem algo para comparar, não dá para saber se o que foi testado fez diferença."),
+    Q("Qual é a melhor forma de registrar um experimento?", ["Anotar data, medidas e o que foi feito", "Guardar tudo só na memória", "Anotar apenas o que deu certo", "Escrever só o resultado final"], "Um bom registro permite que outra pessoa repita e confira o seu trabalho."),
+    Q("Duas coisas aconteceram juntas. Isso prova que uma causou a outra?", ["Não, é preciso investigar", "Sim, sempre", "Sim, se aconteceu duas vezes", "Só se alguém famoso disser"], "Acontecer junto não prova causa. Um teste controlado ajuda a descobrir."),
+    Q("Viu uma notícia científica surpreendente. O que fazer primeiro?", ["Procurar a fonte e outras confirmações", "Compartilhar logo com todos", "Acreditar porque tem muitas curtidas", "Ignorar toda a ciência"], "Fontes confiáveis e a confirmação de outros estudos dão mais segurança."),
+    Q("Em que ordem costuma funcionar uma investigação?", ["Pergunta, hipótese, teste, conclusão", "Conclusão, pergunta, teste, hipótese", "Teste, conclusão, hipótese, pergunta", "Hipótese, conclusão, pergunta, teste"], "A ordem ajuda a organizar o raciocínio, e cada resultado pode gerar nova pergunta.")
+  ],
+  energia: [
+    Q("Para o LED acender, o circuito precisa estar:", ["Fechado, com caminho completo", "Aberto, com um fio solto", "Sem nenhuma fonte de energia", "Molhado"], "A corrente só circula quando há um caminho completo, saindo e voltando à fonte."),
+    Q("Qual destes materiais é um bom condutor de eletricidade?", ["Cobre", "Borracha", "Plástico", "Madeira seca"], "Metais como o cobre conduzem bem. Por isso os fios são de metal."),
+    Q("Por que os fios têm uma capa de plástico?", ["O plástico é isolante e protege", "O plástico aumenta a corrente", "Só para deixar o fio colorido", "Para o fio ficar mais pesado"], "O isolante evita choques e impede que os fios encostem e causem curto-circuito."),
+    Q("O LED não acendeu. Qual pode ser o motivo?", ["Ele foi ligado invertido", "Ele é muito colorido", "A sala está clara", "Ele é pequeno demais"], "O LED tem lado certo: a corrente passa em um só sentido."),
+    Q("Que transformação acontece em uma pilha ligada?", ["Energia química vira elétrica", "Luz vira som", "Calor vira água", "Eletricidade vira pilha nova"], "Reações químicas dentro da pilha geram a corrente elétrica."),
+    Q("Um ventilador transforma energia elétrica principalmente em:", ["Movimento", "Luz", "Comida", "Água"], "O motor converte eletricidade em movimento. Parte vira calor."),
+    Q("O que um painel solar faz?", ["Transforma luz em eletricidade", "Transforma vento em luz", "Guarda água da chuva", "Esfria o sol"], "Células fotovoltaicas geram corrente quando a luz do Sol as atinge."),
+    Q("Qual é a unidade da tensão elétrica?", ["Volt", "Metro", "Litro", "Grama"], "Pilhas comuns têm 1,5 volt. A tomada da parede tem muito mais."),
+    Q("O que é um curto-circuito?", ["Corrente passando por um caminho sem resistência", "Um circuito muito pequeno", "Uma lâmpada apagada", "Um fio bem colorido"], "A corrente sobe muito e pode esquentar os fios. Por isso é perigoso."),
+    Q("Na sala maker, qual projeto é seguro para experimentar?", ["Pilha pequena e LED", "Fios ligados na tomada", "Abrir um carregador ligado", "Usar a tomada com as mãos molhadas"], "Tomadas podem matar. Experimente sempre com baixa tensão e com orientação.")
+  ],
+  materia: [
+    Q("Quais são os três estados físicos mais comuns da matéria?", ["Sólido, líquido e gasoso", "Quente, frio e morno", "Grande, médio e pequeno", "Metal, vidro e plástico"], "A mesma substância pode mudar de estado, como a água em gelo, líquido e vapor."),
+    Q("Quando a roupa seca no varal, a água:", ["Evapora", "Desaparece da natureza", "Vira tecido", "Vira sal"], "A água passa para o estado gasoso e se mistura ao ar."),
+    Q("As gotinhas por fora de um copo gelado vêm:", ["Do vapor de água do ar", "De dentro do vidro", "Do gelo atravessando o copo", "Do próprio vidro derretendo"], "O vapor do ar esfria ao tocar o copo e condensa."),
+    Q("Água com sal bem dissolvido é:", ["Uma mistura homogênea", "Uma substância pura", "Um gás", "Um metal"], "Na mistura homogênea, não dá para ver as partes separadas."),
+    Q("Por que um pedaço de madeira costuma boiar na água?", ["É menos denso que a água", "É mais pesado que qualquer pedra", "A água empurra só o que é pequeno", "A madeira não tem massa"], "O que importa é a densidade, a relação entre massa e volume."),
+    Q("Como separar areia da água?", ["Por filtração", "Por imã", "Com um ventilador", "Esperando a areia evaporar"], "O filtro deixa o líquido passar e retém os grãos."),
+    Q("O PLA da impressora 3D derrete e depois endurece. Isso é:", ["Uma transformação física", "O nascimento de um novo elemento", "Uma fotossíntese", "Uma evaporação"], "O material muda de forma e estado, mas continua sendo PLA."),
+    Q("Um prego enferrujando é exemplo de:", ["Transformação química", "Evaporação", "Filtração", "Mudança de cor sem novo material"], "O ferro reage com oxigênio e água, formando uma nova substância."),
+    Q("Toda matéria é formada por:", ["Átomos", "Fótons de luz apenas", "Células em todos os casos", "Som"], "Os átomos se organizam e formam tudo o que tem massa."),
+    Q("Ao nível do mar, a água pura ferve a cerca de:", ["100 °C", "10 °C", "37 °C", "500 °C"], "A temperatura de ebulição muda com a altitude. Em lugares altos, a água ferve antes.")
+  ],
+  vida: [
+    Q("Qual é a menor unidade viva dos seres vivos?", ["A célula", "O átomo", "O órgão", "O osso"], "Alguns seres têm uma célula só. O corpo humano tem trilhões."),
+    Q("Na fotossíntese, as plantas produzem seu alimento usando:", ["Luz, água e gás carbônico", "Só terra", "Só adubo", "Escuridão e sal"], "O processo também libera oxigênio para o ambiente."),
+    Q("Qual é a função principal dos pulmões?", ["Fazer trocas de gases", "Bombear o sangue", "Digerir comida", "Sustentar o corpo"], "O oxigênio entra no sangue e o gás carbônico sai."),
+    Q("O coração é responsável por:", ["Bombear sangue pelo corpo", "Produzir pensamentos", "Filtrar o ar", "Quebrar os alimentos"], "Ele é um músculo que trabalha sem parar."),
+    Q("Em uma cadeia alimentar, quem é o produtor?", ["A planta", "O leão", "O ser humano", "O gavião"], "Os produtores fabricam o próprio alimento e sustentam a cadeia."),
+    Q("Fungos e bactérias decompositores:", ["Devolvem nutrientes ao solo", "Só causam doenças", "Produzem luz solar", "Não têm função na natureza"], "Sem decompositores, os restos de seres vivos se acumulariam."),
+    Q("Como uma vacina protege o corpo?", ["Ensina o sistema imune a reconhecer o invasor", "Mata todos os micróbios do corpo", "Substitui o sangue", "Faz o coração bater mais rápido"], "O corpo aprende a responder sem precisar passar pela doença."),
+    Q("Toda bactéria faz mal?", ["Não, muitas são úteis", "Sim, todas causam doença", "Sim, menos no iogurte", "Bactérias não existem no corpo"], "Muitas ajudam na digestão e na produção de alimentos."),
+    Q("Onde fica a informação hereditária na maior parte das células?", ["No DNA", "No suor", "No cabelo cortado apenas", "Nas unhas apenas"], "O DNA guarda instruções passadas de geração em geração."),
+    Q("Por que lavar as mãos ajuda a evitar doenças?", ["Remove micróbios da pele", "Aumenta o tamanho das mãos", "Muda o DNA", "Faz o corpo produzir água"], "Água e sabão retiram micróbios que poderiam entrar pela boca ou pelo nariz.")
+  ],
+  planeta: [
+    Q("O dia e a noite acontecem porque a Terra:", ["Gira em torno do próprio eixo", "Se afasta do Sol toda noite", "Fica parada e o Sol apaga", "Passa atrás da Lua"], "Esse movimento é a rotação e dura cerca de 24 horas."),
+    Q("Quanto tempo a Terra leva para dar uma volta em torno do Sol?", ["Cerca de um ano", "Um dia", "Uma semana", "Dez anos"], "Esse movimento é a translação e leva cerca de 365 dias."),
+    Q("O que causa as estações do ano?", ["A inclinação do eixo da Terra", "A distância da Lua", "A Terra ficar mais perto do Sol no verão", "O vento mudar de direção"], "A inclinação muda quanta luz solar cada região recebe durante o ano."),
+    Q("O Sol é:", ["Uma estrela", "Um planeta", "Um satélite", "Um cometa"], "É a estrela mais próxima de nós e a principal fonte de energia da Terra."),
+    Q("Qual é o maior planeta do Sistema Solar?", ["Júpiter", "Terra", "Marte", "Mercúrio"], "Júpiter é um gigante gasoso e tem mais massa que todos os outros planetas juntos."),
+    Q("Por que as coisas caem quando soltas?", ["A gravidade da Terra as atrai", "O ar empurra tudo para cima", "O chão puxa só objetos pesados", "Elas querem descansar"], "A gravidade é a atração entre corpos que têm massa."),
+    Q("As fases da Lua mudam porque:", ["Vemos partes diferentes de sua face iluminada", "A sombra da Terra cobre a Lua toda noite", "A Lua muda de tamanho", "A Lua se acende e se apaga"], "A Lua gira em torno da Terra, e o ângulo da luz do Sol muda."),
+    Q("No ciclo da água, as nuvens se formam quando o vapor:", ["Condensa", "Vira terra", "Vira gás carbônico", "Desaparece"], "O vapor sobe, esfria e forma gotículas."),
+    Q("O efeito estufa natural é:", ["O que mantém a Terra aquecida para a vida", "Um defeito de estufas de plantas", "A causa do dia e da noite", "A falta de oxigênio"], "O problema atual é a intensificação desse efeito pelo excesso de gases emitidos por atividades humanas."),
+    Q("Na sala maker, qual atitude reduz o lixo?", ["Reaproveitar sobras e testar em papelão", "Imprimir sem planejar", "Jogar sobras de filamento na pia", "Descartar a peça ao primeiro defeito"], "Planejar, reaproveitar e separar resíduos economiza material e energia.")
+  ]
+};
+const FASES = [
+  { id: 1, tipo: "normal", banco: "metodo", jogo: "defeito", titulo: "Sala de investigação", tags: "Método científico", sala: "Investigação", circuitos: 3,
+    leitura: ["Apagão na escola! Nada funciona e ninguém sabe por quê. Antes de sair trocando fios, um bom cientista faz uma pergunta, levanta uma hipótese e testa.", "Aqui você vai achar a lâmpada queimada usando poucos testes. Durante a busca, aparecem perguntas sobre como a ciência investiga."],
+    curiosidade: "Testar no meio da fileira é uma estratégia: cada teste bem escolhido elimina metade das possibilidades." },
+  { id: 2, tipo: "normal", banco: "energia", jogo: "circuito", titulo: "Laboratório de energia", tags: "Eletricidade e energia", sala: "Energia", circuitos: 3,
+    leitura: ["Agora é com a própria eletricidade. A corrente é o movimento de cargas por um caminho fechado. Ela sai da fonte, passa pelo circuito e volta.", "A energia não surge do nada: ela se transforma. A pilha transforma energia química em elétrica, e o LED transforma elétrica em luz.", "Gire as peças para fechar o circuito. A corrente para em cada chave até você responder à pergunta."],
+    curiosidade: "Importante: tomada dá choque e pode matar. Experimentos em casa e na escola só com pilha e baixa tensão." },
+  { id: 3, tipo: "normal", banco: "materia", jogo: "esteira", titulo: "Sala da matéria", tags: "Química e estados físicos", sala: "Matéria", circuitos: 3,
+    leitura: ["Tudo que tem massa e ocupa espaço é matéria: o fio de cobre, o plástico da capa, o ar da sala.", "A matéria muda. Em uma mudança física ela continua igual por dentro, como o gelo derretendo. Em uma mudança química surge algo novo, como a ferrugem.", "Nesta sala, os itens passam por uma esteira e você precisa classificá-los antes que cheguem ao fim."],
+    curiosidade: "A impressora 3D usa uma mudança física: o plástico derrete, escorre pelo bico e endurece de novo." },
+  { id: 4, tipo: "normal", banco: "vida", jogo: "sinais", titulo: "Horta e laboratório da vida", tags: "Seres vivos e corpo humano", sala: "Vida", circuitos: 3,
+    leitura: ["Sem luz, as plantas da horta sofrem. Elas usam a luz do Sol para produzir o próprio alimento, e toda a cadeia alimentar depende disso.", "O corpo humano também é um sistema de sistemas: células formam tecidos e órgãos, que trabalham juntos.", "Aqui você vai repetir a sequência de sinais que acende nos órgãos, testando a sua memória."],
+    curiosidade: "Nosso corpo também usa sinais elétricos: é assim que os neurônios levam mensagens." },
+  { id: 5, tipo: "normal", banco: "planeta", jogo: "orbita", titulo: "Observatório", tags: "Terra, ambiente e espaço", sala: "Observatório", circuitos: 3,
+    leitura: ["Do telhado da escola, sem as luzes, dá para ver o céu muito melhor. A Terra gira, dá voltas no Sol e tem água mudando de estado o tempo todo.", "O que fazemos aqui também afeta o planeta. Energia, lixo e clima fazem parte da mesma conversa.", "Pare cada planeta na marca para alinhar o telescópio. Observe a velocidade de cada órbita."],
+    curiosidade: "A poluição luminosa esconde as estrelas das cidades. Um apagão mostra um céu que quase ninguém vê." },
+  { id: 6, tipo: "tempo", banco: null, jogo: "misto", titulo: "Religar a escola", tags: "Toda a ciência, com relógio", sala: "Auditório", circuitos: 4,
+    leitura: ["Falta só o auditório, e a feira de ciências começa em minutos! Cada rodada é um desafio diferente, sorteado entre os das outras salas. As perguntas aparecem misturadas e têm tempo limite.", "Quanto mais rápido responder certo, maior o bônus."],
+    curiosidade: "Se o tempo de uma pergunta acabar, você fica sem os pontos daquela pergunta e continua jogando." }
+];
+const CHAVES_POR_CIRCUITO = 2;
+const NIVEIS = {
+  facil: { nome: "Fácil", resumo: "Desafios menores e mais tempo", col: 4, lin: 3, tempo: 40, lampadas: 6, tempoItem: 5, sequencia: 3, tolerancia: 16 },
+  normal: { nome: "Normal", resumo: "O desafio padrão", col: 5, lin: 4, tempo: 30, lampadas: 8, tempoItem: 3.6, sequencia: 4, tolerancia: 11 },
+  dificil: { nome: "Difícil", resumo: "Desafios maiores e menos tempo", col: 5, lin: 5, tempo: 20, lampadas: 12, tempoItem: 2.6, sequencia: 5, tolerancia: 8 }
+};
+const BONUS_CIRCUITO = 50, PONTOS_MIN_FASE = 0.5;
+const PALAVROES = ["porra","caralho","merda","puta","viado","buceta","bosta","foda","piroca","cacete","arrombado","babaca","otario","vagabund","corno","fdp","vsf","pqp","nazi","hitler"];
+const NOMES_A = ["Elétron","Próton","Átomo","Neutrino","Planeta","Cometa","Capacitor","Resistor","Núcleo","Fóton","Micróbio","Neurônio"];
+const NOMES_B = ["Livre","Estável","Carregado","Veloz","Curioso","Brilhante","Quântico","Ligado","Polar","Solar"];
+
+const perguntasDa = f => f.circuitos * CHAVES_POR_CIRCUITO;
+const maxFase = f => {
+  let s = 0; const n = perguntasDa(f);
+  for (let i = 0; i < n; i++) s += 100 + Math.min(i * 10, 50);
+  return s + f.circuitos * BONUS_CIRCUITO + (f.tipo === "tempo" ? n * 50 : 0);
+};
+const PONTOS_TOTAL = FASES.reduce((s, f) => s + maxFase(f), 0);
+
+/* ---------- ESTADO ---------- */
+const app = document.getElementById("app");
+let J = { apelido: "", turma: "", melhor: {} };
+let som = true, timer = null, abaRank = "turma", DIF = NIVEIS.normal, nivelAtual = "normal", partida = null;
+const NIVEL_FIXO = (() => { try { const n = new URLSearchParams(location.search).get("nivel"); return NIVEIS[n] ? n : null; } catch { return null; } })();
+const guarda = {
+  ler(k, pad) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : pad; } catch { return pad; } },
+  por(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mistura = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const total = () => Object.values(J.melhor).reduce((s, n) => s + n, 0);
+const passou = f => (J.melhor[f.id] || 0) >= maxFase(f) * PONTOS_MIN_FASE;
+const liberada = f => f.id === 1 || passou(FASES[f.id - 2]);
+const estrelas = (p, m) => { const r = p / m; return r >= .9 ? 3 : r >= .7 ? 2 : r >= .5 ? 1 : 0; };
+const desenhaEstrelas = n => "★".repeat(n) + "☆".repeat(3 - n);
+const salvar = () => { guarda.por("ligaai:j:" + J.turma + ":" + J.apelido.toLowerCase(), J.melhor); guarda.por("ligaai:ultimo", { apelido: J.apelido, turma: J.turma, nivel: nivelAtual }); };
+const limpaTimer = () => { if (timer) { clearInterval(timer); timer = null; } };
+const semAcento = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+const proibido = s => { const n = semAcento(s).toLowerCase().replace(/[^a-z0-9]/g, "").replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a"); return PALAVROES.some(p => n.includes(p)); };
+function bip(tipo) {
+  if (!som) return;
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    const c = bip.c || (bip.c = new C()), o = c.createOscillator(), g = c.createGain();
+    o.type = "sine"; o.frequency.value = { gira: 520, ok: 880, no: 170, luz: 1240 }[tipo];
+    const d = tipo === "gira" ? .04 : .25;
+    g.gain.setValueAtTime(tipo === "gira" ? .03 : .09, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + d);
+    o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + d);
+  } catch {}
+}
+function mostra(html) { limpaTimer(); partida = null; document.querySelectorAll(".modal").forEach(m => m.remove()); app.innerHTML = html; window.scrollTo(0, 0); }
+const barra = () => '<div class="barra"><span>' + esc(J.apelido) + (J.turma ? " · " + esc(J.turma) : "") + " · " + DIF.nome + '</span><span>Pontos: <strong>' + total() + '</strong></span><span class="esp"></span><button id="b-som" type="button" aria-pressed="' + som + '">Som: ' + (som ? "ligado" : "desligado") + '</button><button id="b-rank" type="button">Ranking</button></div>';
+function ligaBarra(voltar) {
+  document.getElementById("b-som").onclick = e => { som = !som; e.target.textContent = "Som: " + (som ? "ligado" : "desligado"); e.target.setAttribute("aria-pressed", som); };
+  document.getElementById("b-rank").onclick = () => telaRanking(voltar);
+}
+/* Fachada da escola: cada fase concluída acende uma sala. */
+function escola(classe) {
+  const jan = [[50, 62], [130, 62], [210, 62], [290, 62], [50, 122], [290, 122]];
+  const ok = FASES.filter(passou).length;
+  return '<svg class="escola ' + (classe || "") + '" viewBox="0 0 400 210" role="img" aria-label="Escola com ' + ok + ' de 6 salas acesas">' +
+    [[24, 20], [90, 30], [320, 18], [370, 42], [180, 14], [250, 30]].map(e => '<circle class="estrela" cx="' + e[0] + '" cy="' + e[1] + '" r="1.5"/>').join("") +
+    '<path class="telhado" d="M20 50 200 18 380 50z"/><rect class="predio" x="30" y="50" width="340" height="150"/><rect class="porta" x="170" y="135" width="60" height="65"/>' +
+    FASES.map((f, i) => '<rect class="jan' + (passou(f) ? " acesa" : "") + '" x="' + jan[i][0] + '" y="' + jan[i][1] + '" width="60" height="42"/><text x="' + (jan[i][0] + 30) + '" y="' + (jan[i][1] + 54) + '" text-anchor="middle">' + f.sala.slice(0, 12) + "</text>").join("") +
+    "</svg>";
+}
+
+/* ---------- TELA INICIAL ---------- */
+function telaInicio() {
+  const u = guarda.ler("ligaai:ultimo", { apelido: "", turma: "", nivel: "normal" });
+  mostra('<h1 class="logo">Liga Aí!</h1><p class="sub">A escola apagou. Só a ciência religa a luz.</p><div class="inicio"><section class="modulo" style="padding:12px;justify-content:center">' + escola("topo") + '<p class="leitura" style="font-size:.95rem">Cada sala tem um desafio diferente: caçar defeitos, fechar circuitos, separar materiais, repetir sinais e alinhar planetas. Cada fase concluída acende uma sala.</p></section>' +
+    '<section class="modulo"><form id="f" class="formulario" novalidate><div class="linha" style="align-items:flex-start"><div class="campo"><label for="apelido">Seu apelido</label><input id="apelido" maxlength="16" autocomplete="off" value="' + esc(u.apelido) + '"></div><div class="campo"><label for="turma">Turma (opcional)</label><input id="turma" maxlength="8" autocomplete="off" placeholder="Ex.: 7A" value="' + esc(u.turma) + '"></div></div>' +
+    (NIVEL_FIXO ? '<p class="etiqueta">Nível desta turma: ' + NIVEIS[NIVEL_FIXO].nome + "</p>" : '<fieldset class="niveis"><legend>Nível</legend>' + Object.keys(NIVEIS).map(k => '<label class="nivel"><input type="radio" name="nivel" value="' + k + '"' + (k === (NIVEIS[u.nivel] ? u.nivel : "normal") ? " checked" : "") + "><span><b>" + NIVEIS[k].nome + "</b><small>" + NIVEIS[k].resumo + "</small></span></label>").join("") + "</fieldset>") +
+    '<p id="erro" class="erro" role="alert"></p><div class="linha"><button class="bt liga" type="submit">Ligar</button><button class="bt" type="button" id="sorteia">Sortear apelido</button></div></form><p class="aviso"><b>Proteja seus dados:</b> use só um apelido. Não coloque nome completo, telefone ou e-mail. O ranking guarda apenas apelido, turma e pontos.</p></section></div>');
+  document.getElementById("sorteia").onclick = () => {
+    const a = NOMES_A[Math.floor(Math.random() * NOMES_A.length)], b = NOMES_B[Math.floor(Math.random() * NOMES_B.length)], n = a + " " + b;
+    document.getElementById("apelido").value = n.length <= 16 ? n : a;
+  };
+  document.getElementById("f").onsubmit = e => {
+    e.preventDefault();
+    const ap = document.getElementById("apelido").value.trim().replace(/\s+/g, " ");
+    const tu = document.getElementById("turma").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    const er = document.getElementById("erro");
+    if (ap.length < 3) { er.textContent = "Escreva um apelido com pelo menos 3 letras."; return; }
+    if (!/^[\p{L}\p{N} ]+$/u.test(ap)) { er.textContent = "Use apenas letras, números e espaços no apelido."; return; }
+    if (proibido(ap)) { er.textContent = "Esse apelido não pode ser usado. Escolha outro ou sorteie um."; return; }
+    nivelAtual = NIVEL_FIXO || (document.querySelector('[name="nivel"]:checked') || {}).value || "normal";
+    DIF = NIVEIS[nivelAtual];
+    J = { apelido: ap, turma: tu, melhor: guarda.ler("ligaai:j:" + tu + ":" + ap.toLowerCase(), {}) };
+    salvar(); telaMapa();
+  };
+}
+
+/* ---------- MAPA DA ESCOLA ---------- */
+function telaMapa() {
+  const tudo = FASES.every(passou);
+  mostra(barra() + '<section class="modulo"><p class="etiqueta">Quadro de força</p><h2>Qual sala vamos religar?</h2>' + escola() + '<p>Faça pelo menos metade dos pontos para acender a sala e abrir a próxima. Pode repetir: os desafios e as perguntas mudam, e vale a melhor pontuação.</p>' +
+    '<div class="fases">' + FASES.map(f => { const ok = liberada(f), p = J.melhor[f.id] || 0; return '<button class="fase" type="button" data-f="' + f.id + '"' + (ok ? "" : " disabled") + '><span class="lamp' + (passou(f) ? " ok" : "") + '" aria-hidden="true"></span><h3>' + f.titulo + '</h3><span class="tg">' + f.tags + '</span><span class="pe"><span>' + (ok ? p + " / " + maxFase(f) : "Sem energia") + '</span><span class="estrelas" aria-label="' + estrelas(p, maxFase(f)) + ' de 3 estrelas">' + (ok ? desenhaEstrelas(estrelas(p, maxFase(f))) : "") + "</span></span></button>"; }).join("") + '</div><div class="linha">' + (tudo ? '<button class="bt liga" id="fim" type="button">Ver a escola acesa</button>' : "") + '<button class="bt" id="troca" type="button">Trocar apelido</button></div></section>');
+  ligaBarra(telaMapa);
+  app.querySelectorAll("[data-f]").forEach(b => b.onclick = () => telaLeitura(FASES[b.dataset.f - 1]));
+  document.getElementById("troca").onclick = telaInicio;
+  if (tudo) document.getElementById("fim").onclick = telaFinal;
+}
+function telaLeitura(f) {
+  mostra(barra() + '<section class="modulo"><div><p class="etiqueta">Sala ' + f.id + " de " + FASES.length + " · " + f.tags + "</p><h2>" + f.titulo + '</h2></div><div class="leitura">' + f.leitura.map(t => "<p>" + t + "</p>").join("") + '<p class="curiosidade">' + f.curiosidade + '</p></div><div class="linha"><button class="bt liga" id="vai" type="button">Religar esta sala</button><button class="bt" id="volta" type="button">Voltar</button></div></section>');
+  ligaBarra(() => telaLeitura(f));
+  document.getElementById("volta").onclick = telaMapa;
+  document.getElementById("vai").onclick = () => jogaFase(f);
+}
+
+/* ---------- GERADOR DE CIRCUITOS ---------- */
+/* Lados de uma peça: 1 cima, 2 direita, 4 baixo, 8 esquerda. */
+const LADOS = [[0, -1, 1, 4], [1, 0, 2, 8], [0, 1, 4, 1], [-1, 0, 8, 2]];
+const gira = m => ((m << 1) & 15) | (m >> 3);
+const giraN = (m, n) => { for (let i = 0; i < n; i++) m = gira(m); return m; };
+function caminho(col, lin) {
+  const ini = [0, Math.floor(Math.random() * lin)], fimL = Math.floor(Math.random() * lin), minimo = col + lin - 2;
+  for (let t = 0; t < 400; t++) {
+    const p = [ini], visto = new Set([ini.join()]); let [x, y] = ini;
+    while (!(x === col - 1 && y === fimL)) {
+      const op = mistura(LADOS).filter(d => { const a = x + d[0], b = y + d[1]; return a >= 0 && b >= 0 && a < col && b < lin && !visto.has(a + "," + b); });
+      if (!op.length) break;
+      const d = op.find(v => v[0] === 1 && Math.random() < .45) || op[0];
+      x += d[0]; y += d[1]; p.push([x, y]); visto.add(x + "," + y);
+    }
+    if (x === col - 1 && y === fimL && p.length >= Math.max(minimo, 5)) return { p, ini, fimL };
+  }
+  const p = [ini]; let [x, y] = ini;
+  while (x < col - 1) { x++; p.push([x, y]); }
+  while (y !== fimL) { y += y < fimL ? 1 : -1; p.push([x, y]); }
+  return { p, ini, fimL: y };
+}
+function novoCircuito(col, lin, nChaves) {
+  const { p, ini, fimL } = caminho(col, lin), g = [];
+  for (let y = 0; y < lin; y++) { g[y] = []; for (let x = 0; x < col; x++) g[y][x] = { x, y, certo: 0, base: 0, r: 0, chave: false, noCaminho: false, resposta: null }; }
+  p.forEach((c, i) => {
+    let m = 0;
+    if (i === 0) m |= 8;
+    if (i === p.length - 1) m |= 2;
+    [p[i - 1], p[i + 1]].forEach(o => { if (o) LADOS.forEach(d => { if (c[0] + d[0] === o[0] && c[1] + d[1] === o[1]) m |= d[2]; }); });
+    Object.assign(g[c[1]][c[0]], { certo: m, base: m, noCaminho: true });
+  });
+  /* Peças fora do caminho servem de distração. */
+  g.flat().filter(c => !c.noCaminho).forEach(c => { c.base = Math.random() < .5 ? 5 : 3; });
+  /* As chaves ficam em pontos espalhados do caminho, já na posição certa. */
+  const n = p.length, quer = []; for (let k = 1; k <= nChaves; k++) quer.push(Math.max(1, Math.min(n - 2, Math.round(k * n / (nChaves + 1)))));
+  const chaves = [...new Set(quer)]; for (let i = 1; chaves.length < nChaves && i < n - 1; i++) if (!chaves.includes(i)) chaves.push(i);
+  chaves.forEach(i => { g[p[i][1]][p[i][0]].chave = true; });
+  /* Embaralha girando as peças livres até o circuito exigir um número razoável de toques. */
+  const C = { g, col, lin, iniY: ini[1], fimY: fimL, p };
+  const conta = () => p.reduce((soma, q) => { const c = g[q[1]][q[0]]; if (c.chave) return soma; let t = 0; while (giraN(c.base, c.r + t) !== c.certo) t++; return soma + t; }, 0);
+  const minimo = Math.floor(p.length / 2);
+  let par = 0;
+  for (let t = 0; t < 30 && par < minimo; t++) {
+    g.flat().forEach(c => { if (!c.chave) c.r = Math.floor(Math.random() * 4); });
+    par = conta();
+  }
+  C.par = par;
+  return C;
+}
+const lados = c => giraN(c.base, c.r);
+/* A corrente sai da bateria e para em cada chave ainda não respondida. */
+function estado(C) {
+  const viva = new Set(), pendentes = []; let chegou = false;
+  const ini = C.g[C.iniY][0];
+  if (!(lados(ini) & 8)) return { viva, pendentes, chegou, faltam: C.g.flat().filter(c => c.chave && c.resposta === null).length };
+  const fila = [ini]; viva.add(ini);
+  while (fila.length) {
+    const c = fila.shift();
+    if (c.chave && c.resposta === null) { pendentes.push(c); continue; }
+    if (c.x === C.col - 1 && c.y === C.fimY && (lados(c) & 2)) chegou = true;
+    LADOS.forEach(d => {
+      const o = C.g[c.y + d[1]] && C.g[c.y + d[1]][c.x + d[0]];
+      if (o && !viva.has(o) && (lados(c) & d[2]) && (lados(o) & d[3])) { viva.add(o); fila.push(o); }
+    });
+  }
+  return { viva, pendentes, chegou, faltam: C.g.flat().filter(c => c.chave && c.resposta === null).length };
+}
+
+/* ---------- OS MINIJOGOS: cada um faz duas perguntas e termina com ctx.fim(aproveitamento, mensagem) ---------- */
+const ESTEIRAS = [
+  { pergunta: "Esse material conduz eletricidade?", caixas: ["Condutor", "Isolante"], itens: [["Cobre", 0], ["Alumínio", 0], ["Ferro", 0], ["Moeda de metal", 0], ["Prego", 0], ["Plástico", 1], ["Borracha", 1], ["Vidro", 1], ["Madeira seca", 1], ["Papelão", 1]] },
+  { pergunta: "Em temperatura ambiente, qual é o estado?", caixas: ["Sólido", "Líquido", "Gasoso"], itens: [["Pedra", 0], ["Ferro", 0], ["Sal", 0], ["Água", 1], ["Óleo de cozinha", 1], ["Álcool", 1], ["Oxigênio", 2], ["Gás carbônico", 2], ["Gás de cozinha", 2]] },
+  { pergunta: "Que tipo de transformação é essa?", caixas: ["Física", "Química"], itens: [["Gelo derretendo", 0], ["Água fervendo", 0], ["PLA derretendo", 0], ["Vidro quebrando", 0], ["Papel rasgado", 0], ["Prego enferrujando", 1], ["Papel queimando", 1], ["Bolo assando", 1], ["Leite azedando", 1], ["Fruta apodrecendo", 1]] }
+];
+const ORGAOS = [["Cérebro", "🧠"], ["Coração", "❤️"], ["Pulmão", "🌬️"], ["Estômago", "🍽️"]];
+const JOGOS = {
+  /* Fase 1: testar pontos da fileira para achar o defeito, como quem testa hipóteses */
+  defeito: {
+    nome: "Caça ao defeito",
+    como: "Uma lâmpada da fileira queimou e cortou a corrente. Toque em uma lâmpada para testar se a corrente chega até ela. Dica: testar no meio elimina metade das suspeitas.",
+    monta(ctx) {
+      const n = DIF.lampadas, ruim = Math.floor(Math.random() * n), teste = []; let perguntou = false, testes = 0;
+      ctx.area.innerHTML = '<div class="fileira" id="fil">' + Array.from({ length: n }, (_, i) => '<button class="bulbo" type="button" data-i="' + i + '" aria-label="Testar lâmpada ' + (i + 1) + '"><i></i><span>' + (i + 1) + "</span></button>").join("") + "</div>";
+      ctx.dado({ ruim });
+      ctx.est("Em qual lâmpada você testa primeiro?");
+      ctx.area.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+        if (ctx.ocupado()) return;
+        const i = +b.dataset.i;
+        if (teste[i] !== undefined) return;
+        testes++; bip("gira");
+        const passa = i < ruim;
+        ctx.area.querySelectorAll("[data-i]").forEach(x => { const k = +x.dataset.i; if ((passa && k <= i) || (!passa && k >= i)) { teste[k] = k < ruim; x.classList.add(k < ruim ? "passa" : "corta"); } });
+        const achou = (ruim > 0 && teste[ruim - 1] === true && teste[ruim] === false) || (ruim === 0 && teste[0] === false);
+        const terminar = () => {
+          ctx.area.querySelectorAll("[data-i]").forEach(x => x.disabled = true);
+          ctx.area.querySelector('[data-i="' + ruim + '"]').classList.add("achada");
+          const ideal = Math.ceil(Math.log2(n)) + 1;
+          ctx.pergunta(() => ctx.fim(testes <= ideal ? 1 : testes <= ideal + 2 ? .5 : 0, "O defeito era a lâmpada " + (ruim + 1) + ". Você fez " + testes + (testes === 1 ? " teste." : " testes.")));
+        };
+        const segue = () => { if (achou) terminar(); else ctx.est(passa ? "A corrente chegou até a " + (i + 1) + ". O defeito está mais adiante." : "A corrente não chegou à " + (i + 1) + ". O defeito está nela ou antes."); };
+        if (!perguntou) { perguntou = true; ctx.pergunta(segue); } else segue();
+      });
+    }
+  },
+  /* Fase 2: girar as peças do circuito */
+  circuito: {
+    nome: "Fechar o circuito",
+    como: "Toque nas peças para girá-las e ligar a bateria à lâmpada. Quando a corrente chegar a uma chave, responda à pergunta. Poucos toques valem bônus.",
+    monta(ctx) {
+      const C = novoCircuito(DIF.col, DIF.lin, CHAVES_POR_CIRCUITO); let toques = 0, fechou = false, h = "";
+      ctx.dado({ C });
+      for (let y = 0; y < C.lin; y++) {
+        h += y === C.iniY ? '<div class="ponta"><div class="bateria">+</div></div>' : "<div></div>";
+        for (let x = 0; x < C.col; x++) {
+          const c = C.g[y][x], tr = LADOS.map(d => (c.base & d[2]) ? '<line class="trilha" x1="50" y1="50" x2="' + (50 + d[0] * 50) + '" y2="' + (50 + d[1] * 50) + '"/>' : "").join("");
+          h += '<button class="peca" type="button" data-x="' + x + '" data-y="' + y + '" aria-label="' + (c.chave ? "Chave" : "Peça") + ", linha " + (y + 1) + ", coluna " + (x + 1) + '"' + (c.chave ? " disabled" : "") + '><svg viewBox="0 0 100 100" style="transform:rotate(' + c.r * 90 + 'deg)" aria-hidden="true">' + tr + "</svg>" + (c.chave ? '<span class="chave">?</span>' : "") + "</button>";
+        }
+        h += y === C.fimY ? '<div class="ponta"><div class="lampada" id="lamp"></div></div>' : "<div></div>";
+      }
+      ctx.area.innerHTML = '<div class="circuito" id="cir" style="--n:' + DIF.col + '">' + h + "</div>";
+      function atualiza() {
+        const e = estado(C);
+        ctx.area.querySelectorAll(".peca").forEach(b => b.classList.toggle("viva", e.viva.has(C.g[+b.dataset.y][+b.dataset.x])));
+        if (fechou) return;
+        if (e.pendentes.length) {
+          const c = e.pendentes[0];
+          ctx.pergunta(ok => {
+            c.resposta = ok;
+            const el = ctx.area.querySelector('.peca[data-x="' + c.x + '"][data-y="' + c.y + '"] .chave');
+            if (el) { el.textContent = ok ? "✓" : "✗"; el.classList.add(ok ? "fechada" : "queimada"); }
+            atualiza();
+          });
+          return;
+        }
+        if (e.chegou && e.faltam === 0) {
+          fechou = true; bip("luz");
+          ctx.area.querySelector("#lamp").classList.add("acesa");
+          ctx.area.querySelectorAll(".peca").forEach(b => b.disabled = true);
+          ctx.fim(toques <= C.par + 2 ? 1 : toques <= C.par * 2 + 4 ? .5 : 0, "A lâmpada acendeu com " + toques + " toques.");
+          return;
+        }
+        ctx.est(e.chegou ? "A luz chegou, mas falta passar a corrente pelas chaves." : e.viva.size ? "A corrente está passando. Continue o caminho!" : "Gire a peça ligada à bateria.");
+      }
+      ctx.area.querySelectorAll(".peca:not(:disabled)").forEach(b => b.onclick = () => {
+        if (ctx.ocupado() || fechou) return;
+        const c = C.g[+b.dataset.y][+b.dataset.x];
+        c.r++; toques++; b.querySelector("svg").style.transform = "rotate(" + c.r * 90 + "deg)"; bip("gira");
+        atualiza();
+      });
+      atualiza();
+    }
+  },
+  /* Fase 3: classificar o que passa na esteira antes de sair da tela */
+  esteira: {
+    nome: "Esteira de materiais",
+    como: "Os itens passam pela esteira. Toque na caixa certa antes que cada um chegue ao fim.",
+    monta(ctx) {
+      const E = ESTEIRAS[ctx.rodada % ESTEIRAS.length], itens = mistura(E.itens).slice(0, 6); let i = 0, certos = 0, gen = 0;
+      ctx.area.innerHTML = '<p class="enunciado" style="text-align:center">' + E.pergunta + '</p><div class="pista" aria-live="polite"><div class="item" id="item"></div></div><div class="caixas" style="--c:' + E.caixas.length + '">' + E.caixas.map((c, k) => '<button class="caixa" type="button" data-c="' + k + '">' + c + "</button>").join("") + "</div>";
+      const el = ctx.area.querySelector("#item");
+      const proximo = () => {
+        if (!ctx.vivo()) return;
+        if (i >= itens.length) { ctx.pergunta(() => ctx.fim(certos === itens.length ? 1 : certos >= itens.length - 2 ? .5 : 0, "Você acertou " + certos + " de " + itens.length + " itens.")); return; }
+        const it = itens[i], g = ++gen;
+        ctx.dado({ certo: it[1], gen: g });
+        ctx.est("Item " + (i + 1) + " de " + itens.length);
+        el.textContent = it[0]; el.className = "item";
+        el.style.animation = "none"; void el.offsetWidth; el.style.animation = "passa " + DIF.tempoItem + "s linear forwards";
+        setTimeout(() => { if (ctx.vivo() && gen === g) resposta(-1); }, DIF.tempoItem * 1000);
+      };
+      function resposta(k) {
+        const it = itens[i]; gen++;
+        const ok = k === it[1]; if (ok) certos++;
+        bip(ok ? "ok" : "no");
+        el.className = "item " + (ok ? "bom" : "ruim"); el.style.animationPlayState = "paused";
+        ctx.est(ok ? "Certo!" : (k === -1 ? "Passou! " : "Não é essa. ") + it[0] + ": " + E.caixas[it[1]] + ".");
+        i++;
+        const volta = () => setTimeout(proximo, ok ? 350 : 1300);
+        if (i === 3) ctx.pergunta(proximo); else volta();
+      }
+      ctx.area.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { if (!ctx.ocupado() && gen === ctx.lerDado().gen) resposta(+b.dataset.c); });
+      proximo();
+    }
+  },
+  /* Fase 4: repetir a sequência de sinais, como os neurônios levando mensagens */
+  sinais: {
+    nome: "Sinais do corpo",
+    como: "Os neurônios levam sinais elétricos pelo corpo. Observe a ordem em que os órgãos acendem e repita tocando neles.",
+    monta(ctx) {
+      let tamanho = DIF.sequencia, fase = 0, erros = 0, seq = [], pos = 0, ouvindo = false;
+      ctx.area.innerHTML = '<div class="corpo-jogo">' + ORGAOS.map((o, i) => '<button class="orgao" type="button" data-o="' + i + '"><b aria-hidden="true">' + o[1] + "</b><span>" + o[0] + "</span></button>").join("") + "</div>";
+      const bts = [...ctx.area.querySelectorAll("[data-o]")];
+      const acende = (i, ms) => { bts[i].classList.add("ativo"); setTimeout(() => bts[i].classList.remove("ativo"), ms); };
+      const toca = () => {
+        ouvindo = false; pos = 0; ctx.est("Observe a sequência de " + seq.length + " sinais…");
+        seq.forEach((o, k) => setTimeout(() => { if (ctx.vivo()) { acende(o, 430); bip("gira"); } }, 500 + k * 650));
+        setTimeout(() => { if (ctx.vivo()) { ouvindo = true; ctx.est("Sua vez: repita a sequência."); } }, 500 + seq.length * 650);
+      };
+      const nova = () => { seq = Array.from({ length: tamanho }, () => Math.floor(Math.random() * ORGAOS.length)); ctx.dado({ seq }); toca(); };
+      bts.forEach(b => b.onclick = () => {
+        if (!ouvindo || ctx.ocupado()) return;
+        const o = +b.dataset.o; acende(o, 180);
+        if (o !== seq[pos]) { erros++; bip("no"); ouvindo = false; ctx.est("Sinal errado. Veja de novo."); setTimeout(() => { if (ctx.vivo()) toca(); }, 900); return; }
+        pos++;
+        if (pos < seq.length) return;
+        ouvindo = false; bip("ok"); fase++;
+        if (fase === 1) { tamanho++; ctx.pergunta(nova); }
+        else ctx.pergunta(() => ctx.fim(erros === 0 ? 1 : erros === 1 ? .5 : 0, erros ? "Você repetiu os sinais com " + erros + (erros === 1 ? " erro." : " erros.") : "Sinais perfeitos, sem nenhum erro."));
+      });
+      nova();
+    }
+  },
+  /* Fase 5: parar cada planeta na marca. Quem orbita mais perto do Sol anda mais rápido. */
+  orbita: {
+    nome: "Alinhar os planetas",
+    como: "Aperte Parar quando o planeta passar pela marca. Repare: quanto mais perto do Sol, mais rápida é a órbita.",
+    monta(ctx) {
+      const R = [130, 90, 52], V = [55, 90, 140], cores = ["#7FB7FF", "#FF9F6B", "#D9D9D9"];
+      const ang = R.map(() => Math.random() * 360); let atual = 0, erros = 0, ult = performance.now(), parado = false;
+      ctx.area.innerHTML = '<svg class="ceu" viewBox="0 0 300 300" role="img" aria-label="Três planetas orbitando o Sol"><circle cx="150" cy="150" r="20" fill="#FFD166"/>' + R.map(r => '<circle cx="150" cy="150" r="' + r + '" fill="none" stroke="#5F7797" stroke-dasharray="4 5"/>').join("") + '<line x1="150" y1="6" x2="150" y2="110" stroke="#FFE14D" stroke-width="3"/>' + R.map((r, i) => '<circle id="pl' + i + '" r="9" fill="' + cores[i] + '"/>').join("") + '</svg><div class="linha" style="justify-content:center"><button class="bt liga grande" id="para" type="button">Parar</button></div>';
+      const desenha = () => R.forEach((r, i) => { const a = (ang[i] - 90) * Math.PI / 180, c = ctx.area.querySelector("#pl" + i); if (c) { c.setAttribute("cx", 150 + r * Math.cos(a)); c.setAttribute("cy", 150 + r * Math.sin(a)); } });
+      const laco = ag => {
+        if (!ctx.vivo()) return;
+        requestAnimationFrame(laco);
+        const dt = Math.min(.1, (ag - ult) / 1000); ult = ag;
+        if (!ctx.ocupado() && !parado) ang[atual] = (ang[atual] + V[atual] * dt) % 360;
+        desenha();
+      };
+      const parar = () => {
+        if (ctx.ocupado() || parado) return;
+        const d = Math.min(ang[atual] % 360, 360 - ang[atual] % 360);
+        if (d > DIF.tolerancia) { erros++; bip("no"); ctx.est("Passou longe da marca. Tente de novo."); return; }
+        ang[atual] = 0; bip("ok"); atual++;
+        if (atual === 1) ctx.est("Boa! Agora o planeta do meio, mais rápido.");
+        else if (atual === 2) { ctx.est("Falta o planeta mais perto do Sol, o mais rápido."); ctx.pergunta(() => {}); }
+        else { parado = true; ctx.area.querySelector("#para").disabled = true; ctx.pergunta(() => ctx.fim(erros <= 1 ? 1 : erros <= 3 ? .5 : 0, "Planetas alinhados com " + erros + (erros === 1 ? " erro." : " erros."))); }
+      };
+      ctx.area.querySelector("#para").onclick = parar;
+      ctx.tecla(e => { if ((e.key === " " || e.key === "Enter") && document.activeElement !== ctx.area.querySelector("#para")) { e.preventDefault(); parar(); } });
+      ctx.dado({ ang, parar, atual: () => atual });
+      ctx.est("Comece pelo planeta de fora, o mais lento.");
+      requestAnimationFrame(laco);
+    }
+  }
+};
+
+/* ---------- PARTIDA ---------- */
+function montaPerguntas(f) {
+  const n = perguntasDa(f);
+  if (f.banco) return mistura(BANCO[f.banco]).slice(0, n);
+  const lista = []; Object.keys(BANCO).forEach(k => lista.push(...mistura(BANCO[k]).slice(0, 2)));
+  return mistura(lista).slice(0, n);
+}
+function jogaFase(f) {
+  const P = { f, perguntas: montaPerguntas(f), feitas: 0, pontos: 0, seq: 0, n: 0, modal: false, dado: {}, tecla: null, id: 0, ordem: f.jogo === "misto" ? mistura(Object.keys(JOGOS)).slice(0, f.circuitos) : null };
+  function placar() { const el = document.getElementById("pts"); if (el) el.textContent = P.pontos + " pts · Sequência: " + P.seq; }
+  function novo() {
+    const J2 = JOGOS[P.ordem ? P.ordem[P.n] : f.jogo], id = ++P.id;
+    mostra(barra() + '<section class="modulo"><div class="linha" style="justify-content:space-between"><p class="etiqueta">' + f.titulo + " · Rodada " + (P.n + 1) + " de " + f.circuitos + '</p><p class="etiqueta" id="pts"></p></div><h3>' + J2.nome + '</h3><p class="como">' + J2.como + '</p><div id="jogo"></div><p class="estado" id="est" role="status"></p><div id="fimc"></div><div class="linha"><button class="bt" id="sair" type="button">Sair da sala</button></div></section>');
+    partida = P; P.modal = false; P.tecla = null; P.dado = {};
+    ligaBarra(() => telaLeitura(f));
+    document.getElementById("sair").onclick = telaMapa;
+    placar();
+    J2.monta({
+      area: document.getElementById("jogo"), rodada: P.n,
+      vivo: () => partida === P && P.id === id,
+      ocupado: () => P.modal,
+      est: t => { const e = document.getElementById("est"); if (e) e.textContent = t; },
+      dado: d => { P.dado = { ...P.dado, ...d }; },
+      lerDado: () => P.dado,
+      tecla: fn => { P.tecla = fn; },
+      pergunta: cb => abrePergunta(cb),
+      fim: (fr, msg) => terminaRodada(fr, msg)
+    });
+  }
+  function terminaRodada(fr, msg) {
+    P.tecla = null;
+    const b = Math.round(BONUS_CIRCUITO * fr); P.pontos += b; placar();
+    const e = document.getElementById("est"); if (e) e.textContent = "";
+    const ult = P.n === f.circuitos - 1;
+    document.getElementById("fimc").innerHTML = '<div class="retorno"><p><b>Rodada concluída!</b> ' + esc(msg) + " " + (b ? "Bônus de capricho: +" + b + " pontos." : "Dá para ganhar bônus com mais capricho na próxima.") + '</p><div class="linha fim"><button class="bt liga" id="prox" type="button">' + (ult ? "Acender a sala" : "Próxima rodada") + "</button></div></div>";
+    const p = document.getElementById("prox"); p.focus({ preventScroll: true }); p.scrollIntoView({ block: "nearest" });
+    p.onclick = () => { if (ult) telaResultado(f, P.pontos); else { P.n++; novo(); } };
+  }
+  function abrePergunta(cb) {
+    P.modal = true;
+    const it = P.perguntas[P.feitas++]; let restante = DIF.tempo, feita = false;
+    const ops = mistura(it.o.map((t, k) => ({ t, k })));
+    const m = document.createElement("div");
+    m.className = "modal"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "Pergunta");
+    m.innerHTML = '<div class="modulo"><p class="etiqueta">Pergunta ' + P.feitas + " de " + P.perguntas.length + " · " + P.pontos + " pts</p>" + (f.tipo === "tempo" ? '<div class="tempo" role="timer" aria-label="Tempo restante"><div id="t" style="width:100%"></div></div>' : "") + '<p class="enunciado">' + esc(it.q) + '</p><div class="opcoes">' + ops.map(o => '<button class="op" type="button" data-k="' + o.k + '">' + esc(o.t) + "</button>").join("") + '</div><div id="r"></div></div>';
+    document.body.appendChild(m);
+    const prim = m.querySelector(".op"); if (prim) prim.focus({ preventScroll: true });
+    const resp = k => {
+      if (feita) return; feita = true; limpaTimer();
+      const ok = k === it.a; let ganho = 0;
+      if (ok) { ganho = 100 + Math.min(P.seq * 10, 50); P.seq++; if (f.tipo === "tempo") ganho += Math.round(50 * Math.max(0, restante) / DIF.tempo); } else P.seq = 0;
+      P.pontos += ganho; bip(ok ? "ok" : "no"); placar();
+      m.querySelectorAll(".op").forEach(b => { const n = +b.dataset.k; b.disabled = true; if (n === it.a) b.classList.add("certa"); else if (n === k) b.classList.add("errada"); else b.classList.add("apagada"); });
+      m.querySelector("#r").innerHTML = '<div class="retorno"><p><b>' + (k === -1 ? "O tempo acabou: sem pontos." : ok ? "Certo! +" + ganho + " pontos." : "Não foi dessa vez: sem pontos.") + "</b> " + esc(it.p) + '</p><div class="linha fim"><button class="bt liga" id="seg" type="button">Continuar</button></div></div>';
+      const s = m.querySelector("#seg"); s.focus({ preventScroll: true }); s.scrollIntoView({ block: "nearest" });
+      s.onclick = () => { m.remove(); P.modal = false; cb(ok); };
+    };
+    m.querySelectorAll(".op").forEach(b => b.onclick = () => resp(+b.dataset.k));
+    if (f.tipo === "tempo") timer = setInterval(() => {
+      restante -= .25;
+      const b = m.querySelector("#t"); if (b) b.style.width = Math.max(0, restante / DIF.tempo * 100) + "%";
+      if (restante <= 0) resp(-1);
+    }, 250);
+  }
+  novo();
+}
+addEventListener("keydown", e => {
+  if (!partida) return;
+  if (partida.modal) { const n = +e.key; if (n >= 1 && n <= 4) { const b = document.querySelectorAll(".modal .op:not(:disabled)")[n - 1]; if (b) b.click(); } return; }
+  if (partida.tecla) partida.tecla(e);
+});
+
+/* ---------- RESULTADO ---------- */
+function telaResultado(f, pts) {
+  const m = maxFase(f), recorde = pts > (J.melhor[f.id] || 0);
+  if (recorde) { J.melhor[f.id] = pts; salvar(); }
+  enviaPontos();
+  const ok = pts >= m * PONTOS_MIN_FASE, prox = FASES[f.id], tudo = FASES.every(passou);
+  mostra(barra() + '<section class="modulo"><p class="etiqueta">' + f.titulo + '</p><p class="placar">' + pts + '<span style="font-size:.4em"> / ' + m + '</span></p><p class="grandes" aria-label="' + estrelas(pts, m) + ' de 3 estrelas">' + desenhaEstrelas(estrelas(pts, m)) + "</p>" + escola() + "<p>" + (recorde ? "Novo recorde nesta sala! " : "Seu recorde continua: " + J.melhor[f.id] + " pontos. ") + (ok ? "A sala " + f.sala + " voltou a ter luz." : "Faça pelo menos " + Math.ceil(m * PONTOS_MIN_FASE) + " pontos para acender esta sala. Releia o texto e tente de novo.") + '</p><div class="linha">' + (tudo ? '<button class="bt liga" id="fim" type="button">Ver a escola acesa</button>' : ok && prox ? '<button class="bt liga" id="seg" type="button">Próxima sala</button>' : "") + '<button class="bt" id="rep" type="button">Jogar de novo</button><button class="bt" id="sum" type="button">Quadro de força</button></div></section>');
+  ligaBarra(() => telaResultado(f, pts));
+  document.getElementById("rep").onclick = () => telaLeitura(f);
+  document.getElementById("sum").onclick = telaMapa;
+  if (tudo) document.getElementById("fim").onclick = telaFinal;
+  else if (ok && prox) document.getElementById("seg").onclick = () => telaLeitura(prox);
+}
+
+/* ---------- RANKING: online com a função Netlify, local como reserva ---------- */
+function rankLocal(turma) { return guarda.ler("ligaai:rank", []).filter(p => !turma || p.turma === turma); }
+function guardaLocal() {
+  const l = guarda.ler("ligaai:rank", []).filter(p => !(p.apelido.toLowerCase() === J.apelido.toLowerCase() && p.turma === J.turma));
+  l.push({ apelido: J.apelido, turma: J.turma, pontos: total(), nivel: nivelAtual });
+  guarda.por("ligaai:rank", l);
+}
+async function enviaPontos() {
+  guardaLocal();
+  try { await fetch("/api/ranking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apelido: J.apelido, turma: J.turma, pontos: total(), nivel: nivelAtual }) }); } catch {}
+}
+async function buscaRanking(turma) {
+  try {
+    const r = await fetch("/api/ranking?turma=" + encodeURIComponent(turma), { cache: "no-store" });
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!Array.isArray(d.jogadores)) throw 0;
+    return { online: true, lista: d.jogadores };
+  } catch { return { online: false, lista: rankLocal(turma) }; }
+}
+async function telaRanking(voltar) {
+  if (!J.turma) abaRank = "todas";
+  mostra(barra() + '<section class="modulo"><div><p class="etiqueta">Equipe de manutenção</p><h2>Ranking</h2></div>' + (J.turma ? '<div class="abas"><button type="button" data-a="turma" aria-pressed="' + (abaRank === "turma") + '">Turma ' + esc(J.turma) + '</button><button type="button" data-a="todas" aria-pressed="' + (abaRank === "todas") + '">Todas as turmas</button></div>' : "") + '<div id="lista"><p class="etiqueta">Carregando…</p></div><div class="linha"><button class="bt" id="v" type="button">Voltar</button></div></section>');
+  ligaBarra(voltar);
+  document.getElementById("v").onclick = voltar;
+  app.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { abaRank = b.dataset.a; telaRanking(voltar); });
+  const { online, lista } = await buscaRanking(abaRank === "turma" ? J.turma : "");
+  const el = document.getElementById("lista"); if (!el) return;
+  const ord = lista.slice().sort((a, b) => b.pontos - a.pontos).slice(0, 20);
+  el.innerHTML = (ord.length ? '<ol class="tab">' + ord.map((p, i) => {
+    const eu = p.apelido.toLowerCase() === J.apelido.toLowerCase() && p.turma === J.turma;
+    return '<li class="' + (eu ? "eu" : "") + '"><span class="pos">' + (i + 1) + 'º</span><span class="nm">' + esc(p.apelido) + (p.turma && abaRank !== "turma" ? " <small>" + esc(p.turma) + "</small>" : "") + (NIVEIS[p.nivel] ? " <small>" + NIVEIS[p.nivel].nome + "</small>" : "") + '</span><span class="pt">' + p.pontos + "</span></li>";
+  }).join("") + "</ol>" : "<p>Ninguém pontuou ainda. Termine uma sala para aparecer aqui.</p>") + '<p class="etiqueta" style="margin-top:10px">' + (online ? "Ranking online: atualiza para todos." : "Ranking deste aparelho: mostra só quem jogou aqui.") + "</p>";
+}
+
+/* ---------- FINAL ---------- */
+function telaFinal() {
+  mostra(barra() + '<section class="modulo"><p class="etiqueta">Relatório de manutenção</p><h2 class="logo menor">Escola acesa!</h2><p class="etiqueta">Equipe: ' + esc(J.apelido) + "</p>" + escola() + '<p class="placar">' + total() + '<span style="font-size:.4em"> / ' + PONTOS_TOTAL + '</span></p><div class="leitura"><p>Você caçou defeitos, fechou circuitos, separou materiais, repetiu sinais do corpo e alinhou planetas para religar cada sala.</p><p class="curiosidade"><b>Desafio para a sala maker:</b> com pilha, LED e fita de cobre ou papel-alumínio, monte um circuito de verdade. Faça uma hipótese: o que conduz e o que não conduz? Teste moedas, plástico e lápis. Registre tudo. Use só pilha, nunca a tomada.</p></div><div class="linha"><button class="bt liga" id="r" type="button">Ver ranking</button><button class="bt" id="s" type="button">Quadro de força</button></div></section>');
+  ligaBarra(telaFinal);
+  document.getElementById("r").onclick = () => telaRanking(telaFinal);
+  document.getElementById("s").onclick = telaMapa;
+}
+
+telaInicio();
+</script>
+</body>
+</html>

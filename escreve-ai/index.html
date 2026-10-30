@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escreve Aí!</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;600&display=swap">
+<style>
+/* Layout: oficina tipográfica. Bancada de madeira escura, tipos de chumbo para tocar e provas em papel-jornal. */
+:root {
+  color-scheme: dark;
+  --madeira: #2B1A10;
+  --madeira-clara: #4A2E1B;
+  --veio: #352113;
+  --latao: #D9A93F;
+  --latao-escuro: #8E6A1E;
+  --chumbo: #AEB4BA;
+  --chumbo-claro: #DDE1E4;
+  --chumbo-escuro: #5E656C;
+  --papel: #ECE9DE;
+  --tinta: #16120E;
+  --cinza: #5A544A;
+  --vermelho: #C9281A;
+  --verde: #1F7A4A;
+  --display: "Abril Fatface", Georgia, serif;
+  --texto: "Libre Baskerville", Georgia, serif;
+  --placa: "Oswald", "Arial Narrow", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: repeating-linear-gradient(92deg, var(--madeira) 0 34px, var(--veio) 34px 37px, var(--madeira) 37px 81px, #271709 81px 83px);
+  color: var(--papel);
+  font: 400 1rem/1.6 var(--texto);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 40px;
+}
+#app { max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3, p { margin: 0; }
+h2 { font: 400 clamp(1.7rem, 5.4vw, 2.5rem)/1.1 var(--display); text-wrap: balance; }
+h3 { font: 400 1.25rem/1.15 var(--display); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--latao); outline-offset: 2px; }
+
+/* Prova em papel-jornal */
+.papel { position: relative; background: var(--papel); color: var(--tinta); padding: clamp(16px, 4vw, 30px); display: flex; flex-direction: column; gap: 14px; box-shadow: 0 2px 0 #fff inset, 0 10px 22px rgba(0, 0, 0, .55); min-width: 0; }
+.etiqueta { font: 500 .8rem/1.35 var(--placa); letter-spacing: .09em; text-transform: uppercase; color: var(--cinza); }
+.filete { border: 0; border-top: 3px double var(--tinta); margin: 0; }
+.leitura { display: flex; flex-direction: column; gap: 12px; max-width: 66ch; }
+.olho { border-left: 5px solid var(--vermelho); padding: 4px 0 4px 12px; font-style: italic; }
+.aviso { border: 1px solid var(--tinta); padding: 10px 12px; font-size: .9rem; }
+.erro { color: var(--vermelho); font-weight: 700; min-height: 1.5em; font-size: .92rem; }
+
+/* Placa de latão com parafusos */
+.bt { min-height: 50px; padding: 10px 20px; border: 0; background: linear-gradient(180deg, #F0C766, var(--latao) 55%, #B98C2C); color: var(--tinta); box-shadow: 0 4px 0 var(--latao-escuro), 0 6px 10px rgba(0, 0, 0, .35); font: 600 1.02rem/1.1 var(--placa); letter-spacing: .06em; text-transform: uppercase; transition: transform .07s, box-shadow .07s; }
+.bt:hover:not(:disabled) { filter: brightness(1.06); }
+.bt:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--latao-escuro); }
+.bt:disabled { opacity: .45; cursor: not-allowed; }
+.bt.sec { background: var(--papel); box-shadow: 0 4px 0 #9d988a; }
+.bt.sec:active:not(:disabled) { box-shadow: 0 1px 0 #9d988a; }
+.papel .bt.sec { background: #fff; box-shadow: inset 0 0 0 2px var(--tinta); }
+.linha { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.linha.fim { justify-content: flex-end; }
+
+/* Título em tipos de chumbo */
+.composto { display: flex; flex-wrap: wrap; gap: 4px; }
+.composto span { display: grid; place-items: center; width: clamp(38px, 10.5vw, 62px); height: clamp(52px, 14vw, 84px); font: 400 clamp(1.8rem, 7.4vw, 3.2rem)/1 var(--display); color: var(--chumbo-claro); text-shadow: 0 -1px 0 #000; background: linear-gradient(135deg, #7C838A, var(--chumbo-escuro) 60%, #40464C); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2), 0 4px 0 #2a2e32; animation: encaixa .3s backwards; }
+.composto.menor span { width: clamp(26px, 7vw, 38px); height: clamp(36px, 9vw, 50px); font-size: clamp(1.1rem, 4.6vw, 1.9rem); }
+.composto i { width: 16px; }
+@keyframes encaixa { from { transform: translateY(-26px); opacity: 0; } }
+.subtitulo { font: 400 1.1rem/1.4 var(--texto); font-style: italic; color: var(--latao); }
+
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 190px; }
+.campo label { font: 600 .92rem/1.2 var(--placa); letter-spacing: .06em; text-transform: uppercase; }
+.campo input { min-height: 50px; width: 100%; padding: 8px 12px; border: 2px solid var(--tinta); background: #fff; font: 400 1.05rem/1.2 var(--texto); }
+.campo input::placeholder { color: var(--cinza); }
+.niveis { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 8px; }
+.niveis legend { font: 600 .92rem/1.2 var(--placa); letter-spacing: .06em; text-transform: uppercase; padding: 0 0 5px; }
+.nivel { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 2px solid var(--tinta); background: #fff; cursor: pointer; }
+.nivel:has(input:checked) { background: var(--tinta); color: var(--papel); }
+.nivel input { margin: 5px 0 0; accent-color: var(--vermelho); }
+.nivel span { display: flex; flex-direction: column; min-width: 0; }
+.nivel b { font: 600 1rem/1.2 var(--placa); letter-spacing: .04em; }
+.nivel small { font-size: .78rem; line-height: 1.3; }
+
+/* Plaqueta do jogador */
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 7px 12px; background: linear-gradient(180deg, #E8BE5E, var(--latao)); color: var(--tinta); box-shadow: 0 3px 0 var(--latao-escuro); font: 500 .92rem/1.2 var(--placa); letter-spacing: .03em; }
+.barra strong { font: 400 1.25rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.barra .esp { flex: 1; }
+.barra button { min-height: 38px; padding: 4px 10px; background: transparent; border: 1.5px solid var(--tinta); font: 500 .84rem/1 var(--placa); letter-spacing: .04em; }
+
+/* Gaveta de tipos: o menu de fases */
+.gaveta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 6px; padding: 8px; background: #1B0F07; box-shadow: inset 0 0 0 3px var(--madeira-clara), inset 0 6px 14px #000; }
+.casa { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 12px; min-height: 134px; border: 0; color: var(--papel); background: linear-gradient(160deg, var(--madeira-clara), #38220F); box-shadow: inset 0 0 0 1px #66472c; }
+.casa:hover:not(:disabled) { background: linear-gradient(160deg, #5C3B23, #452A14); }
+.casa:disabled { opacity: .5; cursor: not-allowed; }
+.casa .le { font: 400 2rem/1 var(--display); color: var(--latao); }
+.casa .tg { font: 500 .78rem/1.3 var(--placa); letter-spacing: .05em; color: var(--chumbo-claro); }
+.casa .pe { margin-top: auto; padding-top: 6px; display: flex; justify-content: space-between; gap: 8px; font: 500 .88rem/1.2 var(--placa); }
+.estrelas { color: var(--latao); letter-spacing: .08em; }
+
+/* Mesa de composição */
+.enunciado { font: 700 clamp(1.02rem, 3vw, 1.22rem)/1.5 var(--texto); text-wrap: pretty; }
+.progresso { display: flex; gap: 4px; }
+.progresso i { flex: 1; height: 8px; background: #cfcbbd; }
+.progresso i.ok { background: var(--verde); }
+.progresso i.no { background: var(--vermelho); }
+.progresso i.ag { background: var(--tinta); }
+.tempo { height: 10px; background: #cfcbbd; }
+.tempo div { height: 100%; background: var(--vermelho); transition: width .25s linear; }
+.componedor { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; padding: 10px; background: #D3CFC1; box-shadow: inset 0 2px 5px rgba(0, 0, 0, .35); min-height: 74px; }
+.vaga, .tipo { width: 44px; height: 54px; display: grid; place-items: center; font: 700 1.5rem/1 var(--texto); border: 0; padding: 0; }
+.vaga { background: #B9B4A4; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .4); color: var(--tinta); }
+.vaga.cheia, .tipo { background: linear-gradient(135deg, var(--chumbo-claro), var(--chumbo) 55%, #8C9299); color: var(--tinta); box-shadow: inset 0 0 0 1px #fff8, 0 4px 0 var(--chumbo-escuro); }
+.tipo:hover:not(:disabled) { filter: brightness(1.08); }
+.tipo:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--chumbo-escuro); }
+.tipo:disabled { visibility: hidden; }
+.bandeja { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 14px 10px; background: #1B0F07; box-shadow: inset 0 0 0 3px var(--madeira-clara), inset 0 5px 12px #000; }
+.acentuar { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.acentuar .tipo:disabled { visibility: visible; opacity: .55; filter: grayscale(1); cursor: default; }
+.tipo.certo { background: var(--verde); color: #fff; }
+.tipo.errado { background: var(--vermelho); color: #fff; }
+.frase { display: flex; flex-wrap: wrap; align-items: center; row-gap: 6px; font-size: clamp(1.05rem, 3.2vw, 1.25rem); line-height: 1.4; }
+.pal { padding: 4px 7px; border: 0; background: transparent; border-bottom: 2px dotted var(--cinza); margin: 0 2px; font-size: inherit; min-height: 42px; }
+.pal:hover:not(:disabled) { background: #fff; }
+.pal:disabled { cursor: default; border-bottom-color: transparent; }
+.pal.marca { background: var(--vermelho); color: #fff; text-decoration: line-through; }
+.pal.certa { background: var(--verde); color: #fff; }
+.so { padding: 4px 2px; }
+.brecha { width: 30px; height: 42px; padding: 0; border: 0; background: transparent; position: relative; font: 700 1.5rem/1 var(--texto); color: var(--vermelho); }
+.brecha::after { content: ""; position: absolute; left: 50%; top: 8px; bottom: 8px; border-left: 1px dashed var(--cinza); }
+.brecha[aria-pressed="true"]::after { display: none; }
+.brecha:hover:not(:disabled) { background: #fff; }
+.opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 8px; }
+.op { min-height: 52px; padding: 9px 13px; text-align: left; background: #fff; border: 2px solid var(--tinta); line-height: 1.35; font-size: .95rem; }
+.op:hover:not(:disabled) { background: var(--tinta); color: var(--papel); }
+.op:disabled { cursor: default; color: var(--tinta); }
+.op.certa { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 700; }
+.op.certa::before { content: "✓ "; }
+.op.errada { background: var(--vermelho); border-color: var(--vermelho); color: #fff; font-weight: 700; }
+.op.errada::before { content: "✗ "; }
+.op.apagada { opacity: .45; }
+.citacao { border-top: 1px solid var(--tinta); border-bottom: 1px solid var(--tinta); padding: 10px 2px; font-style: italic; }
+.retorno { border: 2px solid var(--tinta); padding: 12px 14px; background: #fff; display: flex; flex-direction: column; gap: 8px; font-size: .95rem; }
+.retorno b { font-family: var(--texto); }
+
+/* Prelo: a página desce e carimba */
+.prelo { position: relative; height: 96px; overflow: hidden; background: #1B0F07; box-shadow: inset 0 0 0 3px var(--madeira-clara); }
+.prelo .chapa { position: absolute; left: 14%; right: 14%; top: 0; height: 40px; background: linear-gradient(180deg, var(--chumbo), var(--chumbo-escuro)); box-shadow: 0 3px 0 #2a2e32; animation: desce 1s ease-in .2s both; }
+.prelo .chapa::before { content: ""; position: absolute; left: 50%; bottom: 100%; width: 16px; height: 96px; margin-left: -8px; background: var(--latao); }
+.prelo .folhinha { position: absolute; left: 18%; right: 18%; bottom: 8px; height: 30px; background: var(--papel); }
+@keyframes desce { 0% { top: 0; } 45% { top: 18px; } 70% { top: 18px; } 100% { top: 0; } }
+.placar { font: 400 clamp(2.7rem, 10vw, 4.4rem)/1 var(--display); font-variant-numeric: tabular-nums; }
+.grandes { font-size: 1.9rem; letter-spacing: .1em; color: var(--vermelho); }
+.abas { display: flex; flex-wrap: wrap; gap: 8px; }
+.abas button { min-height: 44px; padding: 6px 12px; background: #fff; border: 2px solid var(--tinta); font: 500 .9rem/1 var(--placa); letter-spacing: .04em; }
+.abas button[aria-pressed="true"] { background: var(--tinta); color: var(--papel); }
+.tab { list-style: none; margin: 0; padding: 0; border-top: 3px double var(--tinta); }
+.tab li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 8px 4px; border-bottom: 1px solid var(--tinta); }
+.tab li.eu { background: var(--latao); }
+.tab .pos { font: 400 1.1rem/1 var(--display); }
+.tab .nm { overflow-wrap: anywhere; }
+.tab small { color: var(--cinza); font: 500 .76rem/1 var(--placa); }
+.tab .pt { font: 400 1.1rem/1 var(--display); font-variant-numeric: tabular-nums; }
+
+/* Primeira página do jornal */
+.jornal { display: flex; flex-direction: column; gap: 10px; }
+.cabeca { font: 400 clamp(1.9rem, 8vw, 3.4rem)/1.05 var(--display); text-align: center; }
+.expediente { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font: 500 .8rem/1.3 var(--placa); letter-spacing: .05em; border-top: 1px solid var(--tinta); border-bottom: 3px double var(--tinta); padding: 4px 0; overflow-wrap: anywhere; }
+.colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px 16px; }
+.colunas article { min-width: 0; border-top: 1px solid var(--tinta); padding-top: 6px; }
+.colunas article.falta { opacity: .35; }
+.colunas p { font-size: .86rem; line-height: 1.5; }
+.casa.larga { grid-column: 1 / -1; min-height: 0; background: linear-gradient(160deg, #6E2A1C, #4A1A10); box-shadow: inset 0 0 0 1px #A2523E; }
+.casa.larga:hover:not(:disabled) { background: linear-gradient(160deg, #84341F, #5A2014); }
+.leitura > .campo { flex: none; }
+.campo textarea { width: 100%; padding: 10px 12px; border: 2px solid var(--tinta); background: #fff; font: 400 1rem/1.6 var(--texto); color: var(--tinta); resize: vertical; }
+.regras, .erros { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .9rem; }
+.regras li { color: var(--cinza); }
+.regras li.ok { color: var(--verde); font-weight: 700; }
+.erros { gap: 10px; margin-top: 6px; }
+.erros li { border-top: 1px solid var(--tinta); padding-top: 8px; overflow-wrap: anywhere; }
+.grupo { min-width: 0; }
+.confere { margin: 0; padding: 10px 12px; border: 1px solid var(--tinta); display: flex; flex-direction: column; gap: 6px; font-size: .92rem; }
+.confere legend { font: 600 .92rem/1.2 var(--placa); letter-spacing: .06em; text-transform: uppercase; padding: 0 5px; }
+.confere label { display: flex; gap: 8px; align-items: flex-start; }
+.confere input { margin-top: 5px; accent-color: var(--vermelho); }
+.manchete { font: 400 clamp(1.4rem, 5vw, 2.2rem)/1.15 var(--display); overflow-wrap: anywhere; text-wrap: balance; }
+.corpo { columns: 2 220px; column-gap: 20px; overflow-wrap: anywhere; font-size: .94rem; }
+@media print {
+  body { background: #fff; padding: 0; }
+  .barra, .prelo, .linha { display: none !important; }
+  .papel { box-shadow: none; padding: 0; }
+}
+@media (max-width: 460px) {
+  .componedor { gap: 3px; padding: 8px 4px; }
+  .vaga { width: 32px; height: 44px; font-size: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script>
+"use strict";
+/* ---------- CONTEÚDO DO JOGO: edite aqui para ajustar textos e provas ---------- */
+const PROVAS_POR_FASE = 6, PROVAS_FINAL = 8;
+/* Em "revisao", a palavra errada fica entre asteriscos. Em "virgula", escreva a frase já correta. */
+const BANCO = {
+  compor: [
+    { t: "compor", q: "A regra vale para todos, sem nenhuma ______.", w: "exceção", f: "ssz", p: "Exceção tem xc e ç." },
+    { t: "compor", q: "Depois de um dia de oficina, senti muito ______.", w: "cansaço", f: "szs", p: "Cansaço termina em ç, como abraço e pedaço." },
+    { t: "compor", q: "No verão, a turma foi nadar na ______.", w: "piscina", f: "çzx", p: "Piscina tem sc, como crescer, nascer e descer." },
+    { t: "compor", q: "Não pode ______ na máquina sem orientação.", w: "mexer", f: "chsz", p: "Mexer vem com x. Depois de “me” no início da palavra, costuma aparecer x, como em mexerica. Uma exceção é mecha." },
+    { t: "compor", q: "Sem os óculos, não consigo ______ as letras pequenas.", w: "enxergar", f: "chsz", p: "Depois de “en”, em geral usamos x: enxergar, enxada, enxame." },
+    { t: "compor", q: "Sempre existe outro ______ de resolver o problema.", w: "jeito", f: "gxz", p: "Jeito é com j. Palavras derivadas também: ajeitar, jeitoso." },
+    { t: "compor", q: "Fez um ______ com a mão para chamar o grupo.", w: "gesto", f: "jxz", p: "Gesto se escreve com g, como gesticular." },
+    { t: "compor", q: "Antes de começar o projeto, faça uma boa ______.", w: "pesquisa", f: "zçx", p: "Pesquisa tem s com som de z, como pesquisar." },
+    { t: "compor", q: "Vamos ______ o resultado do teste com calma.", w: "analisar", f: "zçx", p: "Analisar vem de análise, com s. Por isso não usamos z." },
+    { t: "compor", q: "A ______ dura duas horas: leve lanche.", w: "viagem", f: "jçx", p: "O substantivo viagem é com g. Com j é o verbo: que eles viajem." }
+  ],
+  acento: [
+    { t: "acento", com: "lâmpada", p: "Proparoxítona: a sílaba forte é a antepenúltima. Todas as proparoxítonas têm acento." },
+    { t: "acento", com: "café", p: "Oxítona terminada em e leva acento, como você e até." },
+    { t: "acento", com: "ônibus", p: "Proparoxítona: ô-ni-bus. O acento é circunflexo porque o o é fechado." },
+    { t: "acento", com: "saúde", p: "Sa-ú-de: o u forma hiato com a vogal anterior e fica sozinho na sílaba, então leva acento." },
+    { t: "acento", com: "família", p: "Paroxítona terminada em ditongo: fa-mí-lia." },
+    { t: "acento", com: "história", p: "Paroxítona terminada em ditongo: his-tó-ria." },
+    { t: "acento", com: "música", p: "Proparoxítona: mú-si-ca." },
+    { t: "acento", com: "fácil", p: "Paroxítona terminada em l: fá-cil, como útil e móvel." },
+    { t: "acento", com: "açúcar", p: "Paroxítona terminada em r: a-çú-car, como caráter." },
+    { t: "acento", com: "lápis", p: "Paroxítona terminada em i ou is: lá-pis, como táxi." }
+  ],
+  revisao: [
+    { t: "revisao", f: "*Haviam* muitos alunos na oficina.", c: "Havia", p: "Com sentido de existir, o verbo haver não vai para o plural." },
+    { t: "revisao", f: "A turma *foram* à feira maker.", c: "foi", p: "O sujeito “a turma” está no singular, então o verbo também fica." },
+    { t: "revisao", f: "O protótipo ficou *mau* acabado.", c: "mal", p: "Mal é o oposto de bem. Mau é o oposto de bom." },
+    { t: "revisao", f: "Queria imprimir a peça, *mais* faltou filamento.", c: "mas", p: "Mas indica oposição. Mais indica quantidade." },
+    { t: "revisao", f: "A professora chegou *a* dois dias na escola.", c: "há", p: "Para tempo passado, usamos há, do verbo haver." },
+    { t: "revisao", f: "Entregamos o projeto *a* professora.", c: "à", p: "Quem entrega, entrega a alguém: a preposição a mais o artigo a formam a crase." },
+    { t: "revisao", f: "Não sei *porque* a impressora parou.", c: "por que", p: "Em pergunta indireta, escrevemos por que, separado." },
+    { t: "revisao", f: "*Fazem* dois anos que a sala maker abriu.", c: "Faz", p: "Indicando tempo decorrido, o verbo fazer fica no singular." },
+    { t: "revisao", f: "As peças ficaram *pronto* antes do prazo.", c: "prontas", p: "O adjetivo concorda com o substantivo: peças prontas." },
+    { t: "revisao", f: "Seguem *anexo* as fotos do projeto.", c: "anexas", p: "Anexo concorda com o que está anexado: as fotos anexas." }
+  ],
+  virgula: [
+    { t: "virgula", s: "Comprei cola, papel, tesoura e grampos.", p: "A vírgula separa os itens de uma enumeração. Antes do e final, normalmente não se usa." },
+    { t: "virgula", s: "Ana, ligue a impressora.", p: "Vocativo é o chamamento e fica separado por vírgula." },
+    { t: "virgula", s: "A impressora, que é nova, parou.", p: "A oração explicativa fica entre vírgulas." },
+    { t: "virgula", s: "Gutenberg, inventor alemão, criou a prensa de tipos móveis.", p: "O aposto explica o termo anterior e fica entre vírgulas." },
+    { t: "virgula", s: "Ouvimos o barulho, mas continuamos.", p: "Usamos vírgula antes de mas, que liga ideias opostas." },
+    { t: "virgula", s: "São Paulo, 30 de outubro.", p: "Em datas, a vírgula separa o lugar do dia." },
+    { t: "virgula", s: "O fanzine foi impresso, dobrado e distribuído.", p: "Mais uma enumeração: a vírgula separa os termos em sequência." },
+    { t: "virgula", s: "Quando a peça esfriou, tiramos da mesa.", p: "A oração que vem antes da principal, indicando tempo, é separada por vírgula." },
+    { t: "virgula", s: "A professora da oficina ensinou o grupo.", p: "Não há vírgula: nunca separamos o sujeito do verbo." },
+    { t: "virgula", s: "Os alunos da tarde imprimiram o jornal.", p: "Nenhuma vírgula: “os alunos da tarde” é o sujeito e “imprimiram” é o verbo." }
+  ],
+  leitura: [
+    { t: "escolha", x: "ESCOLA GANHA SALA MAKER E ALUNOS IMPRIMEM PRÓPRIO JORNAL", q: "Que gênero é esse texto, curto e em destaque?", o: ["Manchete", "Receita", "Poema", "Carta pessoal"], a: 0, p: "A manchete resume o fato principal para chamar a atenção do leitor." },
+    { t: "escolha", x: "A sala maker abriu na segunda-feira e recebeu 30 alunos.", q: "Essa frase apresenta um fato ou uma opinião?", o: ["Fato: pode ser verificado", "Opinião: é um gosto pessoal", "Ordem: manda fazer algo", "Pergunta: pede uma resposta"], a: 0, p: "Dia e número de alunos podem ser confirmados. Isso caracteriza um fato." },
+    { t: "escolha", x: "A sala maker é o lugar mais legal de toda a escola.", q: "Essa frase apresenta um fato ou uma opinião?", o: ["Opinião: é um julgamento pessoal", "Fato: pode ser medido", "Definição de dicionário", "Instrução de uso"], a: 0, p: "“Mais legal” é uma avaliação de quem escreve. Outras pessoas podem pensar diferente." },
+    { t: "escolha", x: "Aqueça a mesa, nivele o bico e só então inicie a impressão.", q: "Qual é o objetivo principal desse texto?", o: ["Instruir o leitor", "Contar uma lenda", "Vender um produto", "Expressar sentimentos"], a: 0, p: "Verbos no imperativo e passos em ordem são marcas do texto instrucional." },
+    { t: "escolha", x: "Lia terminou o protótipo. Ela ficou orgulhosa.", q: "A palavra “ela” retoma qual termo?", o: ["Lia", "protótipo", "orgulhosa", "terminou"], a: 0, p: "O pronome retoma um termo já citado e evita a repetição." },
+    { t: "escolha", x: "Aquele discurso era só um clichê.", q: "Nessa frase, “clichê” significa:", o: ["Frase muito repetida", "Peça de metal nova", "Foto colorida", "Texto inédito"], a: 0, p: "Clichê era uma chapa de impressão usada muitas vezes. Daí veio o sentido de ideia repetida." },
+    { t: "escolha", x: "Toda a turma deve testar o protótipo antes da feira, pois erros aparecem no uso real.", q: "Qual trecho é o argumento que justifica a ideia?", o: ["pois erros aparecem no uso real", "Toda a turma", "antes da feira", "testar o protótipo"], a: 0, p: "O argumento dá a razão. A palavra “pois” costuma introduzir essa justificativa." },
+    { t: "escolha", x: "O grupo resolveu o problema de forma engenhosa.", q: "Qual palavra pode substituir “engenhosa” sem mudar o sentido?", o: ["criativa", "lenta", "barulhenta", "antiga"], a: 0, p: "Engenhoso é quem tem boas ideias e soluções inventivas." },
+    { t: "escolha", x: "A impressora engoliu o filamento e reclamou com um barulho estranho.", q: "O que dá vida à máquina nessa frase?", o: ["Personificação", "Rima", "Enumeração", "Pergunta retórica"], a: 0, p: "Personificação é atribuir ações humanas a seres ou objetos." },
+    { t: "escolha", x: "ZINE DO 8º ANO · Edição 3 · Feito à mão, xerocado e distribuído de graça.", q: "Pelas informações, esse texto é de um:", o: ["Fanzine independente", "Boleto bancário", "Manual de geladeira", "Contrato de aluguel"], a: 0, p: "Feito à mão, circulação livre e autoria da turma são marcas do fanzine." }
+  ]
+};
+const FASES = [
+  { id: 1, tipo: "compor", banco: "compor", le: "A", titulo: "Caixa de tipos", tags: "Ortografia", resumo: "Grafia conferida letra por letra.",
+    leitura: ["Você entrou na oficina tipográfica. Aqui, cada texto é montado letra por letra com peças de metal, os tipos móveis. Por volta de 1450, na Europa, Gutenberg usou esse sistema em sua prensa. Bem antes, Bi Sheng já tinha criado tipos móveis na China, por volta de 1040.", "Sua tarefa: tocar nos tipos da gaveta e compor a palavra que falta na prova. Com teclado, você também pode digitar. Cuidado: há letras a mais para confundir."],
+    curiosidade: "As maiúsculas ficavam na caixa de cima e as minúsculas na de baixo. É daí que vêm os nomes “caixa alta” e “caixa baixa”." },
+  { id: 2, tipo: "acento", banco: "acento", le: "Á", titulo: "O tipo do acento", tags: "Acentuação", resumo: "Todo acento no lugar certo.",
+    leitura: ["Na composição, um tipo errado muda tudo. Sem acento, “sábia” vira “sabia”, e “pôde” vira “pode”.", "Toque na letra que precisa de acento. Lembre: pronuncie a palavra em voz alta, encontre a sílaba mais forte e pense na regra."],
+    curiosidade: "Toda palavra proparoxítona em português é acentuada. É a regra mais fácil de lembrar." },
+  { id: 3, tipo: "revisao", banco: "revisao", le: "R", titulo: "Mesa do revisor", tags: "Concordância e uso", resumo: "Provas revisadas sem erros.",
+    leitura: ["Antes de rodar o jornal, tira-se uma prova: uma cópia de teste para encontrar erros. Quem faz isso é o revisor.", "Cada frase tem uma palavra errada. Toque nela. Atenção a concordância, mal e mau, mas e mais, há e a."],
+    curiosidade: "Um tipo trocado na impressão podia estragar centenas de cópias. Daí a importância de revisar antes." },
+  { id: 4, tipo: "virgula", banco: "virgula", le: ",", titulo: "Vírgula de chumbo", tags: "Pontuação", resumo: "Pontuação no lugar certo.",
+    leitura: ["A vírgula também era um tipo de metal, e o tipógrafo precisava decidir onde encaixá-la.", "Toque nos espaços entre as palavras para colocar ou tirar a vírgula. Quando achar que está certo, envie para impressão. Nem toda frase precisa de vírgula: esta é a pegadinha!"],
+    curiosidade: "Regra de ouro: nunca separe o sujeito do verbo com vírgula, por mais longo que seja o sujeito." },
+  { id: 5, tipo: "escolha", banco: "leitura", le: "T", titulo: "Leitura de prova", tags: "Gêneros e interpretação", resumo: "Gêneros e sentidos bem lidos.",
+    leitura: ["Um bom jornal não depende só de letras certas. Quem edita precisa saber se um texto é fato ou opinião, qual é seu objetivo e o que cada palavra quer dizer.", "Leia o trecho e escolha a melhor resposta."],
+    curiosidade: "Palavras como “clichê” e “estereótipo” nasceram na tipografia. Eram chapas de impressão que repetiam sempre a mesma coisa." },
+  { id: 6, tipo: "tempo", banco: null, le: "!", titulo: "Fechamento", tags: "Tudo junto, com relógio", resumo: "Edição fechada no prazo.",
+    leitura: ["O jornal fecha hoje! Na fase final, os desafios aparecem misturados e o relógio está correndo.", "Quanto mais rápido acertar, maior o bônus. No fim, você recebe a primeira página com seu nome no expediente."],
+    curiosidade: "No Brasil, a tipografia oficial só começou em 1808, com a Impressão Régia. Antes disso, a Coroa portuguesa proibia oficinas de impressão na colônia." }
+];
+/* O id de cada prova vem da posição no banco: acrescente provas novas sempre no fim de cada lista. */
+Object.keys(BANCO).forEach(k => BANCO[k].forEach((it, i) => { it.id = k + "-" + i; it.grupo = k; }));
+const NOME_GRUPO = { compor: "Ortografia", acento: "Acentuação", revisao: "Concordância e uso", virgula: "Pontuação", leitura: "Gêneros e interpretação" };
+const NIVEIS = {
+  facil: { nome: "Fácil", resumo: "Poucas letras a mais e mais tempo", falsas: 1, tempo: 40 },
+  normal: { nome: "Normal", resumo: "O desafio padrão", falsas: 2, tempo: 30 },
+  dificil: { nome: "Difícil", resumo: "Mais letras a mais e menos tempo", falsas: 3, tempo: 20 }
+};
+const PONTOS_MIN_FASE = 0.5;
+const PALAVROES = ["porra","caralho","merda","puta","viado","buceta","bosta","foda","piroca","cacete","arrombado","babaca","otario","vagabund","corno","fdp","vsf","pqp","nazi","hitler"];
+const NOMES_A = ["Sujeito","Verbo","Acento","Parágrafo","Hífen","Adjetivo","Advérbio","Travessão","Prelo","Tipo","Til","Ditongo"];
+const NOMES_B = ["Oculto","Composto","Agudo","Grave","Negrito","Itálico","Direto","Regular","Átono","Tônico"];
+
+const maxFase = f => {
+  const n = f.id === 6 ? PROVAS_FINAL : PROVAS_POR_FASE; let s = 0;
+  for (let i = 0; i < n; i++) s += 100 + Math.min(i * 10, 50);
+  return s + (f.tipo === "tempo" ? n * 50 : 0);
+};
+const PONTOS_TOTAL = FASES.reduce((s, f) => s + maxFase(f), 0);
+
+/* ---------- ESTADO ---------- */
+const app = document.getElementById("app");
+let J = { apelido: "", turma: "", melhor: {} };
+let som = true, timer = null, abaRank = "turma", DIF = NIVEIS.normal, nivelAtual = "normal", teclaProva = null;
+const NIVEL_FIXO = (() => { try { const n = new URLSearchParams(location.search).get("nivel"); return NIVEIS[n] ? n : null; } catch { return null; } })();
+
+const guarda = {
+  ler(k, pad) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : pad; } catch { return pad; } },
+  por(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mistura = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const total = () => Object.values(J.melhor).reduce((s, n) => s + n, 0);
+const passou = f => (J.melhor[f.id] || 0) >= maxFase(f) * PONTOS_MIN_FASE;
+const liberada = f => f.id === 1 || passou(FASES[f.id - 2]);
+const estrelas = (p, m) => { const r = p / m; return r >= .9 ? 3 : r >= .7 ? 2 : r >= .5 ? 1 : 0; };
+const desenhaEstrelas = n => "★".repeat(n) + "☆".repeat(3 - n);
+const salvar = () => { guarda.por("escreveai:j:" + J.turma + ":" + J.apelido.toLowerCase(), J.melhor); guarda.por("escreveai:ultimo", { apelido: J.apelido, turma: J.turma, nivel: nivelAtual }); };
+const limpaTimer = () => { if (timer) { clearInterval(timer); timer = null; } };
+const semAcento = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+const proibido = s => { const n = semAcento(s).toLowerCase().replace(/[^a-z0-9]/g, "").replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a"); return PALAVROES.some(p => n.includes(p)); };
+
+function bip(tipo) {
+  if (!som) return;
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    const c = bip.c || (bip.c = new C()), o = c.createOscillator(), g = c.createGain();
+    o.type = tipo === "tec" ? "square" : "triangle";
+    o.frequency.value = tipo === "tec" ? 1400 : tipo === "ok" ? 760 : 150;
+    const d = tipo === "tec" ? .03 : .22;
+    g.gain.setValueAtTime(tipo === "tec" ? .025 : .08, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + d);
+    o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + d);
+  } catch {}
+}
+function mostra(html) { limpaTimer(); teclaProva = null; app.innerHTML = html; window.scrollTo(0, 0); }
+const composto = (txt, menor) => '<div class="composto' + (menor ? " menor" : "") + '" role="img" aria-label="' + esc(txt) + '">' + [...txt].map((c, i) => c === " " ? "<i></i>" : '<span aria-hidden="true" style="animation-delay:' + i * 40 + 'ms">' + esc(c) + "</span>").join("") + "</div>";
+const barra = () => '<div class="barra"><span>' + esc(J.apelido) + (J.turma ? " · " + esc(J.turma) : "") + " · " + DIF.nome + '</span><span>Pontos: <strong>' + total() + '</strong></span><span class="esp"></span><button id="b-som" type="button" aria-pressed="' + som + '">Som: ' + (som ? "ligado" : "desligado") + '</button><button id="b-rank" type="button">Ranking</button></div>';
+function ligaBarra(voltar) {
+  document.getElementById("b-som").onclick = e => { som = !som; e.target.textContent = "Som: " + (som ? "ligado" : "desligado"); e.target.setAttribute("aria-pressed", som); };
+  document.getElementById("b-rank").onclick = () => telaRanking(voltar);
+}
+addEventListener("keydown", e => { if (teclaProva) teclaProva(e); });
+
+/* ---------- TELA INICIAL ---------- */
+function telaInicio() {
+  const u = guarda.ler("escreveai:ultimo", { apelido: "", turma: "", nivel: "normal" });
+  mostra(composto("ESCREVE AÍ!") + '<p class="subtitulo">Na oficina de tipos, cada letra é uma peça.</p>' +
+    '<section class="papel"><p>Você é o tipógrafo do jornal da sala maker. Componha palavras com tipos de metal, revise as provas e coloque cada vírgula no lugar para fechar a edição no prazo.</p>' +
+    '<form id="f" class="leitura" style="max-width:none" novalidate><div class="linha" style="align-items:flex-start">' +
+    '<div class="campo"><label for="apelido">Seu apelido</label><input id="apelido" maxlength="16" autocomplete="off" value="' + esc(u.apelido) + '"></div>' +
+    '<div class="campo"><label for="turma">Turma (opcional)</label><input id="turma" maxlength="8" autocomplete="off" placeholder="Ex.: 7A" value="' + esc(u.turma) + '"></div></div>' +
+    (NIVEL_FIXO ? '<p class="etiqueta">Nível desta turma: ' + NIVEIS[NIVEL_FIXO].nome + "</p>" : '<fieldset class="niveis"><legend>Nível</legend>' + Object.keys(NIVEIS).map(k => '<label class="nivel"><input type="radio" name="nivel" value="' + k + '"' + (k === (NIVEIS[u.nivel] ? u.nivel : "normal") ? " checked" : "") + "><span><b>" + NIVEIS[k].nome + "</b><small>" + NIVEIS[k].resumo + "</small></span></label>").join("") + "</fieldset>") +
+    '<p id="erro" class="erro" role="alert"></p><div class="linha"><button class="bt" type="submit">Abrir a oficina</button><button class="bt sec" type="button" id="sorteia">Sortear apelido</button></div></form>' +
+    '<p class="aviso"><b>Proteja seus dados:</b> use só um apelido. Não coloque nome completo, telefone, e-mail ou outra informação pessoal. O ranking guarda apenas apelido, turma e pontos.</p></section>');
+  document.getElementById("sorteia").onclick = () => {
+    const a = NOMES_A[Math.floor(Math.random() * NOMES_A.length)], b = NOMES_B[Math.floor(Math.random() * NOMES_B.length)], n = a + " " + b;
+    document.getElementById("apelido").value = n.length <= 16 ? n : a;
+  };
+  document.getElementById("f").onsubmit = e => {
+    e.preventDefault();
+    const ap = document.getElementById("apelido").value.trim().replace(/\s+/g, " ");
+    const tu = document.getElementById("turma").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    const er = document.getElementById("erro");
+    if (ap.length < 3) { er.textContent = "Escreva um apelido com pelo menos 3 letras."; return; }
+    if (!/^[\p{L}\p{N} ]+$/u.test(ap)) { er.textContent = "Use apenas letras, números e espaços no apelido."; return; }
+    if (proibido(ap)) { er.textContent = "Esse apelido não pode ser usado. Escolha outro ou sorteie um."; return; }
+    nivelAtual = NIVEL_FIXO || (document.querySelector('[name="nivel"]:checked') || {}).value || "normal";
+    DIF = NIVEIS[nivelAtual];
+    J = { apelido: ap, turma: tu, melhor: guarda.ler("escreveai:j:" + tu + ":" + ap.toLowerCase(), {}) };
+    salvar(); telaMapa();
+  };
+}
+
+/* ---------- GAVETA DE FASES ---------- */
+function telaMapa() {
+  const tudo = FASES.every(passou);
+  mostra(barra() + '<section class="papel"><div><p class="etiqueta">Pauta da edição</p><h2>Abra uma casa da gaveta</h2></div><p>Faça pelo menos metade dos pontos para aprovar a seção e abrir a próxima. Você pode repetir: vale sempre a melhor pontuação, e as provas mudam.</p></section>' +
+    '<div class="gaveta">' + FASES.map(f => {
+      const ok = liberada(f), p = J.melhor[f.id] || 0;
+      return '<button class="casa" type="button" data-f="' + f.id + '"' + (ok ? "" : " disabled") + '><span class="le" aria-hidden="true">' + esc(f.le) + "</span><h3>" + f.titulo + '</h3><span class="tg">' + f.tags + '</span><span class="pe"><span>' + (ok ? p + " / " + maxFase(f) : "Trancada") + '</span><span class="estrelas" aria-label="' + estrelas(p, maxFase(f)) + ' de 3 estrelas">' + (ok ? desenhaEstrelas(estrelas(p, maxFase(f))) : "") + "</span></span></button>";
+    }).join("") + casaReportagem() + '</div><div class="linha"><button class="bt sec" id="caderno" type="button">Caderno de erros (' + listaErros().length + ")</button>" + (tudo ? '<button class="bt" id="capa" type="button">Ver minha primeira página</button>' : "") + '<button class="bt sec" id="troca" type="button">Trocar apelido</button></div>');
+  ligaBarra(telaMapa);
+  app.querySelectorAll("[data-f]").forEach(b => b.onclick = () => telaLeitura(FASES[b.dataset.f - 1]));
+  document.getElementById("troca").onclick = telaInicio;
+  document.getElementById("caderno").onclick = telaCaderno;
+  const rep = document.getElementById("reportagem"); if (rep) rep.onclick = telaRedacao;
+  if (tudo) document.getElementById("capa").onclick = telaFinal;
+}
+function telaLeitura(f) {
+  mostra(barra() + '<section class="papel"><div><p class="etiqueta">Seção ' + f.id + " de " + FASES.length + " · " + f.tags + "</p><h2>" + f.titulo + '</h2></div><hr class="filete"><div class="leitura">' + f.leitura.map(t => "<p>" + t + "</p>").join("") + '<p class="olho">' + f.curiosidade + '</p></div><div class="linha"><button class="bt" id="vai" type="button">Começar a compor</button><button class="bt sec" id="volta" type="button">Voltar à gaveta</button></div></section>');
+  ligaBarra(() => telaLeitura(f));
+  document.getElementById("volta").onclick = telaMapa;
+  document.getElementById("vai").onclick = () => jogaFase(f);
+}
+
+/* ---------- AS PROVAS ---------- */
+function montaProvas(f) {
+  if (f.tipo === "caderno") return mistura(provasDoCaderno()).slice(0, PROVAS_POR_FASE);
+  if (f.banco) return mistura(BANCO[f.banco]).slice(0, PROVAS_POR_FASE);
+  const tipos = mistura(Object.keys(BANCO)); const lista = [];
+  tipos.forEach(k => lista.push(...mistura(BANCO[k]).slice(0, 2)));
+  return mistura(lista).slice(0, PROVAS_FINAL);
+}
+const MONTA = {
+  /* Compor a palavra com tipos da gaveta */
+  compor(it, area, fim) {
+    const pecas = mistura([...it.w].map((c, i) => ({ id: "w" + i, c })).concat([...it.f].slice(0, DIF.falsas).map((c, i) => ({ id: "f" + i, c }))));
+    const postos = []; let travado = false;
+    area.innerHTML = '<p class="enunciado">' + it.q.replace(/_+/, "<u>" + "&nbsp;".repeat(10) + "</u>") + '</p><div class="componedor" id="cp" aria-label="Palavra composta"></div><div class="bandeja" id="bj"></div><div class="linha fim"><button class="bt sec" id="apaga" type="button">Tirar último</button><button class="bt" id="ok" type="button">Imprimir</button></div>';
+    const cp = area.querySelector("#cp"), bj = area.querySelector("#bj"), ok = area.querySelector("#ok");
+    function desenha() {
+      cp.innerHTML = [...it.w].map((_, i) => postos[i] ? '<button class="vaga cheia" type="button" data-r="' + i + '" aria-label="Retirar ' + postos[i].c + '">' + esc(postos[i].c) + "</button>" : '<span class="vaga"></span>').join("");
+      bj.innerHTML = pecas.map(p => '<button class="tipo" type="button" data-p="' + p.id + '"' + (postos.includes(p) ? " disabled" : "") + ">" + esc(p.c) + "</button>").join("");
+      ok.disabled = postos.length < it.w.length;
+      bj.querySelectorAll("[data-p]").forEach(b => b.onclick = () => poe(pecas.find(p => p.id === b.dataset.p)));
+      cp.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { if (!travado) { postos.splice(+b.dataset.r, 1); desenha(); } });
+    }
+    function poe(p) { if (travado || !p || postos.length >= it.w.length) return; postos.push(p); bip("tec"); desenha(); }
+    const envia = () => { if (travado || postos.length < it.w.length) return; travado = true; fim(postos.map(p => p.c).join("") === it.w, it.w); };
+    ok.onclick = envia;
+    area.querySelector("#apaga").onclick = () => { if (!travado && postos.length) { postos.pop(); desenha(); } };
+    teclaProva = e => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === "Backspace") { e.preventDefault(); if (!travado && postos.length) { postos.pop(); desenha(); } return; }
+      if (e.key === "Enter") { if (!ok.disabled) { e.preventDefault(); envia(); } return; }
+      if (e.key.length === 1) {
+        const d = e.key.toLowerCase(), livres = pecas.filter(p => !postos.includes(p));
+        const achou = livres.find(p => p.c === d) || livres.find(p => semAcento(p.c) === semAcento(d));
+        if (achou) { e.preventDefault(); poe(achou); }
+      }
+    };
+    desenha();
+    return () => { travado = true; };
+  },
+  /* Tocar na letra que recebe o acento */
+  acento(it, area, fim) {
+    const letras = [...it.com], pos = letras.findIndex(c => /[áéíóúâêô]/.test(c)), base = letras.map(c => /[áéíóúâêô]/.test(c) ? semAcento(c) : c);
+    area.innerHTML = '<p class="enunciado">Em qual letra vai o acento?</p><div class="acentuar">' + base.map((c, i) => '<button class="tipo" type="button" data-i="' + i + '"' + (/[aeiou]/.test(c) ? "" : " disabled") + ">" + esc(c) + "</button>").join("") + "</div>";
+    area.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+      const i = +b.dataset.i, ok = i === pos;
+      area.querySelectorAll("[data-i]").forEach(x => x.disabled = true);
+      const certo = area.querySelector('[data-i="' + pos + '"]'); certo.textContent = letras[pos]; certo.classList.add("certo");
+      if (!ok) b.classList.add("errado");
+      fim(ok, it.com);
+    });
+    return () => area.querySelectorAll("[data-i]").forEach(x => x.disabled = true);
+  },
+  /* Achar a palavra errada na prova */
+  revisao(it, area, fim) {
+    const pedacos = it.f.split(" ");
+    area.innerHTML = '<p class="enunciado">Toque na palavra errada desta prova.</p><p class="frase">' + pedacos.map((w, i) => {
+      const m = w.match(/^\*(.+)\*([.,]?)$/), lim = m ? m[1] : w.replace(/[.,]$/, ""), pt = m ? m[2] : (w.match(/[.,]$/) || [""])[0];
+      return '<button class="pal" type="button" data-i="' + i + '"' + (m ? ' data-e="1"' : "") + ">" + esc(lim) + "</button>" + (pt ? '<span class="so">' + pt + "</span>" : "");
+    }).join("") + "</p>";
+    const certa = it.f.replace(/\*.+?\*/, it.c);
+    area.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+      const ok = !!b.dataset.e;
+      area.querySelectorAll("[data-i]").forEach(x => x.disabled = true);
+      const er = area.querySelector("[data-e]"); er.textContent = it.c; er.classList.add("certa");
+      if (!ok) b.classList.add("marca");
+      fim(ok, certa);
+    });
+    return () => area.querySelectorAll("[data-i]").forEach(x => x.disabled = true);
+  },
+  /* Colocar as vírgulas nas brechas entre as palavras */
+  virgula(it, area, fim) {
+    const brutas = it.s.split(" "), certas = new Set(), palavras = brutas.map((w, i) => { if (/,$/.test(w)) certas.add(i); return w.replace(/,$/, ""); });
+    const marcadas = new Set(); let travado = false;
+    area.innerHTML = '<p class="enunciado">Toque nos espaços para colocar as vírgulas. Pode não precisar de nenhuma!</p><p class="frase" id="fr">' + palavras.map((w, i) => '<span class="so">' + esc(w) + "</span>" + (i < palavras.length - 1 ? '<button class="brecha" type="button" data-b="' + i + '" aria-pressed="false" aria-label="Espaço depois de ' + esc(w) + '"></button>' : "")).join("") + '</p><div class="linha fim"><button class="bt" id="ok" type="button">Imprimir</button></div>';
+    area.querySelectorAll("[data-b]").forEach(b => b.onclick = () => {
+      if (travado) return; const i = +b.dataset.b;
+      if (marcadas.has(i)) marcadas.delete(i); else marcadas.add(i);
+      b.textContent = marcadas.has(i) ? "," : ""; b.setAttribute("aria-pressed", marcadas.has(i)); bip("tec");
+    });
+    area.querySelector("#ok").onclick = () => {
+      if (travado) return; travado = true;
+      const ok = marcadas.size === certas.size && [...marcadas].every(i => certas.has(i));
+      area.querySelectorAll("button").forEach(x => x.disabled = true);
+      fim(ok, it.s);
+    };
+    return () => { travado = true; area.querySelectorAll("button").forEach(x => x.disabled = true); };
+  },
+  /* Ler o trecho e escolher a resposta */
+  escolha(it, area, fim) {
+    const ops = mistura(it.o.map((t, k) => ({ t, k })));
+    area.innerHTML = '<p class="citacao">' + esc(it.x) + '</p><p class="enunciado">' + esc(it.q) + '</p><div class="opcoes">' + ops.map(o => '<button class="op" type="button" data-k="' + o.k + '">' + esc(o.t) + "</button>").join("") + "</div>";
+    const marca = k => area.querySelectorAll(".op").forEach(b => { const n = +b.dataset.k; b.disabled = true; if (n === it.a) b.classList.add("certa"); else if (n === k) b.classList.add("errada"); else b.classList.add("apagada"); });
+    area.querySelectorAll(".op").forEach(b => b.onclick = () => { const k = +b.dataset.k; marca(k); fim(k === it.a, null); });
+    teclaProva = e => { const n = +e.key; if (n >= 1 && n <= 4) { const b = area.querySelectorAll(".op:not(:disabled)")[n - 1]; if (b) b.click(); } };
+    return () => marca(-1);
+  }
+};
+function jogaFase(f) {
+  const provas = montaProvas(f), marcas = []; let i = 0, pontos = 0, seq = 0;
+  function prova() {
+    const it = provas[i]; let restante = DIF.tempo, resolvida = false, encerra = () => {};
+    mostra(barra() + '<section class="papel"><div class="linha" style="justify-content:space-between"><p class="etiqueta">' + f.titulo + " · Prova " + (i + 1) + " de " + provas.length + '</p><p class="etiqueta">' + pontos + " pts · Sequência: " + seq + '</p></div><div class="progresso" aria-hidden="true">' + provas.map((_, k) => '<i class="' + (marcas[k] === true ? "ok" : marcas[k] === false ? "no" : k === i ? "ag" : "") + '"></i>').join("") + "</div>" +
+      (f.tipo === "tempo" ? '<div class="tempo" role="timer" aria-label="Tempo restante"><div id="t" style="width:100%"></div></div>' : "") +
+      '<div id="area" class="leitura" style="max-width:none"></div><div id="r"></div><div class="linha"><button class="bt sec" id="sair" type="button">Sair da seção</button></div></section>');
+    ligaBarra(() => telaLeitura(f));
+    document.getElementById("sair").onclick = f.tipo === "caderno" ? telaCaderno : telaMapa;
+    const fim = (ok, certo, esgotou) => {
+      if (resolvida) return; resolvida = true; limpaTimer(); teclaProva = null;
+      let ganho = 0;
+      const caderno = f.tipo === "caderno";
+      if (ok) { ganho = caderno ? 0 : 100 + Math.min(seq * 10, 50); seq++; if (f.tipo === "tempo") ganho += Math.round(50 * Math.max(0, restante) / DIF.tempo); tiraErro(it.id); } else { seq = 0; poeErro(it.id); }
+      pontos += ganho; marcas[i] = ok; bip(ok ? "ok" : "no");
+      const ult = i === provas.length - 1;
+      document.getElementById("r").innerHTML = '<div class="retorno"><p><b>' + (esgotou ? "O tempo acabou." : ok ? (caderno ? "Corrigida! Saiu do caderno." : "Pode imprimir! +" + ganho + " pontos.") : caderno ? "Ainda não: ela continua no caderno." : "Essa prova voltou com erro.") + "</b> " + (certo ? "Forma certa: <b>" + esc(certo.replace(/\.$/, "")) + "</b>. " : "") + it.p + '</p><div class="linha fim"><button class="bt" id="prox" type="button">' + (ult ? (caderno ? "Voltar ao caderno" : "Rodar no prelo") : "Próxima prova") + "</button></div></div>";
+      const p = document.getElementById("prox"); p.focus({ preventScroll: true }); p.scrollIntoView({ block: "nearest" });
+      p.onclick = () => { if (!ult) { i++; prova(); } else if (caderno) telaCaderno(); else telaResultado(f, pontos); };
+    };
+    encerra = MONTA[it.t](it, document.getElementById("area"), (ok, certo) => fim(ok, certo)) || encerra;
+    if (f.tipo === "tempo") {
+      timer = setInterval(() => {
+        restante -= .25;
+        const b = document.getElementById("t"); if (b) b.style.width = Math.max(0, restante / DIF.tempo * 100) + "%";
+        if (restante <= 0) { encerra(); fim(false, it.t === "escolha" ? null : formaCerta(it), true); }
+      }, 250);
+    }
+  }
+  prova();
+}
+
+/* ---------- CADERNO DE ERROS ---------- */
+const chaveErros = () => "escreveai:e:" + J.turma + ":" + J.apelido.toLowerCase();
+const listaErros = () => guarda.ler(chaveErros(), []);
+function poeErro(id) { const l = listaErros(); if (!l.includes(id)) { l.push(id); guarda.por(chaveErros(), l); } }
+function tiraErro(id) { guarda.por(chaveErros(), listaErros().filter(x => x !== id)); }
+const todasProvas = () => Object.values(BANCO).flat();
+const provasDoCaderno = () => { const l = listaErros(); return todasProvas().filter(it => l.includes(it.id)); };
+function formaCerta(it) {
+  if (it.t === "compor") return it.w;
+  if (it.t === "acento") return it.com;
+  if (it.t === "revisao") return it.f.replace(/\*.+?\*/, it.c);
+  if (it.t === "virgula") return it.s;
+  return it.o[it.a];
+}
+function telaCaderno() {
+  const provas = provasDoCaderno();
+  const grupos = Object.keys(NOME_GRUPO).map(g => ({ g, lista: provas.filter(p => p.grupo === g) })).filter(x => x.lista.length).sort((a, b) => b.lista.length - a.lista.length);
+  mostra(barra() + '<section class="papel"><div><p class="etiqueta">Guardado neste aparelho</p><h2>Caderno de erros</h2></div>' +
+    (provas.length ? "<p>Reveja as regras e refaça as provas. Quando acertar, a prova sai do caderno. Aqui não se ganha nem se perde ponto.</p><p class=\"olho\">Para estudar primeiro: <b>" + NOME_GRUPO[grupos[0].g] + "</b>.</p>" +
+      grupos.map(x => '<div class="grupo"><h3>' + NOME_GRUPO[x.g] + " (" + x.lista.length + ')</h3><ul class="erros">' + x.lista.map(p => "<li><b>" + esc(formaCerta(p)) + "</b><br>" + esc(p.p) + "</li>").join("") + "</ul></div>").join("") :
+      "<p>Nenhuma prova para rever. Quando você errar uma prova, ela aparece aqui com a regra.</p>") +
+    '<div class="linha">' + (provas.length ? '<button class="bt" id="refaz" type="button">Refazer provas</button>' : "") + '<button class="bt sec" id="volta" type="button">Voltar à gaveta</button></div></section>');
+  ligaBarra(telaCaderno);
+  document.getElementById("volta").onclick = telaMapa;
+  if (provas.length) document.getElementById("refaz").onclick = () => jogaFase({ id: 0, tipo: "caderno", titulo: "Caderno de erros" });
+}
+
+/* ---------- REPORTAGEM DO ALUNO ---------- */
+const CONFERE = ["Conta o que aconteceu", "Diz quem participou, sem nomes completos", "Diz quando e onde aconteceu", "Revisei ortografia, acentos e vírgulas"];
+const chaveReportagem = () => "escreveai:r:" + J.turma + ":" + J.apelido.toLowerCase();
+const reportagem = () => guarda.ler(chaveReportagem(), null);
+const contaPalavras = t => (t.trim().match(/[\p{L}\p{N}]+/gu) || []).length;
+const reportagemLiberada = () => passou(FASES[4]);
+function casaReportagem() {
+  const ok = reportagemLiberada(), r = reportagem();
+  return '<button class="casa larga" id="reportagem" type="button"' + (ok ? "" : " disabled") + '><span class="le" aria-hidden="true">¶</span><h3>Sua reportagem</h3><span class="tg">Produção de texto · Sem pontos no ranking</span><span class="pe"><span>' + (!ok ? "Abre depois da seção 5" : r ? "Escrita" : "Escreva sua notícia") + "</span></span></button>";
+}
+/* Bloqueia o que dá para reconhecer sozinho. Quem avalia o texto é o professor. */
+function problemaNoTexto(t) {
+  if (/\S+@\S+\.\S+/.test(t)) return "Tire o e-mail do texto. O jornal não deve ter dados pessoais.";
+  if (/\d{4,5}[\s.-]?\d{4}/.test(t)) return "Tire o número de telefone ou documento do texto.";
+  const palavras = semAcento(t).toLowerCase().split(/[^a-z0-9]+/);
+  if (palavras.some(w => PALAVROES.includes(w) || w.startsWith("vagabund"))) return "Troque as palavras ofensivas antes de guardar.";
+  return "";
+}
+function telaRedacao() {
+  const r = reportagem() || { manchete: "", texto: "", confere: [] };
+  mostra(barra() + '<section class="papel"><div><p class="etiqueta">Pauta: sala maker</p><h2>Escreva sua reportagem</h2></div>' +
+    '<p>Conte algo real da sala maker: um projeto, um problema resolvido, uma peça que deu errado. A manchete e a notícia entram na sua primeira página.</p>' +
+    '<form id="fr" class="leitura" style="max-width:none" novalidate><div class="campo"><label for="manchete">Manchete</label><input id="manchete" maxlength="90" autocomplete="off" value="' + esc(r.manchete) + '"></div>' +
+    '<div class="campo"><label for="texto">Notícia</label><textarea id="texto" rows="7" maxlength="900">' + esc(r.texto) + '</textarea></div>' +
+    '<ul class="regras" id="regras" aria-live="polite"></ul><fieldset class="confere"><legend>Confira você mesmo</legend>' + CONFERE.map((c, i) => '<label><input type="checkbox" data-c="' + i + '"' + (r.confere.includes(i) ? " checked" : "") + "> " + c + "</label>").join("") + '</fieldset>' +
+    '<p class="aviso"><b>Cuidado:</b> não escreva nome completo, telefone, endereço ou fotos de colegas. O texto fica só neste aparelho e não vai para o ranking.</p><p id="erro" class="erro" role="alert"></p>' +
+    '<div class="linha"><button class="bt" type="submit">Guardar reportagem</button><button class="bt sec" id="volta" type="button">Voltar à gaveta</button></div></form></section>');
+  ligaBarra(telaRedacao);
+  const man = document.getElementById("manchete"), tx = document.getElementById("texto"), reg = document.getElementById("regras");
+  const regras = () => {
+    const m = man.value.trim(), t = tx.value.trim(), nm = contaPalavras(m), nt = contaPalavras(t);
+    return [
+      ["Manchete com 3 a 12 palavras (agora: " + nm + ")", nm >= 3 && nm <= 12],
+      ["Notícia com pelo menos 30 palavras (agora: " + nt + ")", nt >= 30],
+      ["Notícia começa com letra maiúscula", /^\p{Lu}/u.test(t)],
+      ["Notícia termina com ponto", /[.!?]$/.test(t)]
+    ];
+  };
+  const pinta = () => { reg.innerHTML = regras().map(([t, ok]) => '<li class="' + (ok ? "ok" : "") + '">' + (ok ? "✓ " : "○ ") + t + "</li>").join(""); };
+  man.oninput = tx.oninput = pinta; pinta();
+  document.getElementById("volta").onclick = telaMapa;
+  document.getElementById("fr").onsubmit = e => {
+    e.preventDefault();
+    const er = document.getElementById("erro");
+    if (!regras().every(x => x[1])) { er.textContent = "Complete os itens marcados com ○ para guardar."; return; }
+    const m = man.value.trim().replace(/\s+/g, " "), t = tx.value.trim(), pr = problemaNoTexto(m + " " + t);
+    if (pr) { er.textContent = pr; return; }
+    guarda.por(chaveReportagem(), { manchete: m, texto: t, confere: [...document.querySelectorAll("[data-c]:checked")].map(c => +c.dataset.c) });
+    telaFolha();
+  };
+}
+/* Página da reportagem, disponível antes de fechar todas as seções. */
+function telaFolha() {
+  const r = reportagem(); if (!r) return telaRedacao();
+  mostra(barra() + '<div class="prelo" aria-hidden="true"><div class="chapa"></div><div class="folhinha"></div></div><section class="papel jornal"><h2 class="cabeca">Jornal da Sala Maker</h2><div class="expediente"><span>Reportagem</span><span>Por: ' + esc(J.apelido) + "</span></div>" + materia(r) + botoesTexto() + '<div class="linha"><button class="bt sec" id="edita" type="button">Editar</button><button class="bt sec" id="s" type="button">Voltar à gaveta</button></div></section>');
+  ligaBarra(telaFolha);
+  ligaTexto();
+  document.getElementById("edita").onclick = telaRedacao;
+  document.getElementById("s").onclick = telaMapa;
+}
+const materia = r => '<h3 class="manchete">' + esc(r.manchete) + '</h3><p class="corpo">' + esc(r.texto).replace(/\n+/g, "<br>") + "</p>";
+const emMoldura = () => { try { return window.self !== window.top; } catch { return true; } };
+const botoesTexto = () => '<div class="linha"><button class="bt sec" id="copia" type="button">Copiar texto</button>' + (emMoldura() ? "" : '<button class="bt sec" id="imprime" type="button">Imprimir</button>') + '<span class="etiqueta" id="copiou" role="status"></span></div>';
+function ligaTexto() {
+  const r = reportagem(), c = document.getElementById("copia"), im = document.getElementById("imprime");
+  if (im) im.onclick = () => window.print();
+  if (!c || !r) return;
+  c.onclick = async () => {
+    const aviso = document.getElementById("copiou");
+    try { await navigator.clipboard.writeText(r.manchete + "\n\n" + r.texto + "\n\nPor: " + J.apelido); aviso.textContent = "Texto copiado."; }
+    catch { aviso.textContent = "Não deu para copiar. Selecione o texto na página."; }
+  };
+}
+
+/* ---------- RESULTADO ---------- */
+function telaResultado(f, pts) {
+  const m = maxFase(f), recorde = pts > (J.melhor[f.id] || 0);
+  if (recorde) { J.melhor[f.id] = pts; salvar(); }
+  enviaPontos();
+  const ok = pts >= m * PONTOS_MIN_FASE, prox = FASES[f.id], tudo = FASES.every(passou);
+  mostra(barra() + '<div class="prelo" aria-hidden="true"><div class="chapa"></div><div class="folhinha"></div></div><section class="papel"><p class="etiqueta">' + f.titulo + '</p><p class="placar">' + pts + '<span style="font-size:.4em"> / ' + m + '</span></p><p class="grandes" aria-label="' + estrelas(pts, m) + ' de 3 estrelas">' + desenhaEstrelas(estrelas(pts, m)) + "</p><p>" + (recorde ? "Novo recorde nesta seção! " : "Seu recorde continua: " + J.melhor[f.id] + " pontos. ") + (ok ? "Seção aprovada e impressa: " + f.resumo : "Faça pelo menos " + Math.ceil(m * PONTOS_MIN_FASE) + " pontos para aprovar a seção. Releia a pauta e tente de novo.") + (listaErros().length ? " Seu caderno tem " + listaErros().length + (listaErros().length === 1 ? " prova para rever." : " provas para rever.") : "") + '</p><div class="linha">' + (tudo ? '<button class="bt" id="fim" type="button">Ver minha primeira página</button>' : ok && prox ? '<button class="bt" id="seg" type="button">Próxima seção</button>' : "") + '<button class="bt sec" id="rep" type="button">Fazer de novo</button><button class="bt sec" id="sum" type="button">Gaveta</button></div></section>');
+  ligaBarra(() => telaResultado(f, pts));
+  document.getElementById("rep").onclick = () => telaLeitura(f);
+  document.getElementById("sum").onclick = telaMapa;
+  if (tudo) document.getElementById("fim").onclick = telaFinal;
+  else if (ok && prox) document.getElementById("seg").onclick = () => telaLeitura(prox);
+}
+
+/* ---------- RANKING: online com a função Netlify, local como reserva ---------- */
+function rankLocal(turma) { return guarda.ler("escreveai:rank", []).filter(p => !turma || p.turma === turma); }
+function guardaLocal() {
+  const l = guarda.ler("escreveai:rank", []).filter(p => !(p.apelido.toLowerCase() === J.apelido.toLowerCase() && p.turma === J.turma));
+  l.push({ apelido: J.apelido, turma: J.turma, pontos: total(), nivel: nivelAtual });
+  guarda.por("escreveai:rank", l);
+}
+async function enviaPontos() {
+  guardaLocal();
+  try { await fetch("/api/ranking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apelido: J.apelido, turma: J.turma, pontos: total(), nivel: nivelAtual }) }); } catch {}
+}
+async function buscaRanking(turma) {
+  try {
+    const r = await fetch("/api/ranking?turma=" + encodeURIComponent(turma), { cache: "no-store" });
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!Array.isArray(d.jogadores)) throw 0;
+    return { online: true, lista: d.jogadores };
+  } catch { return { online: false, lista: rankLocal(turma) }; }
+}
+async function telaRanking(voltar) {
+  if (!J.turma) abaRank = "todas";
+  mostra(barra() + '<section class="papel"><div><p class="etiqueta">Quadro de tipógrafos</p><h2>Ranking</h2></div>' + (J.turma ? '<div class="abas"><button type="button" data-a="turma" aria-pressed="' + (abaRank === "turma") + '">Turma ' + esc(J.turma) + '</button><button type="button" data-a="todas" aria-pressed="' + (abaRank === "todas") + '">Todas as turmas</button></div>' : "") + '<div id="lista"><p class="etiqueta">Carregando…</p></div><div class="linha"><button class="bt sec" id="v" type="button">Voltar</button></div></section>');
+  ligaBarra(voltar);
+  document.getElementById("v").onclick = voltar;
+  app.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { abaRank = b.dataset.a; telaRanking(voltar); });
+  const { online, lista } = await buscaRanking(abaRank === "turma" ? J.turma : "");
+  const el = document.getElementById("lista"); if (!el) return;
+  const ord = lista.slice().sort((a, b) => b.pontos - a.pontos).slice(0, 20);
+  el.innerHTML = (ord.length ? '<ol class="tab">' + ord.map((p, i) => {
+    const eu = p.apelido.toLowerCase() === J.apelido.toLowerCase() && p.turma === J.turma;
+    return '<li class="' + (eu ? "eu" : "") + '"><span class="pos">' + (i + 1) + 'º</span><span class="nm">' + esc(p.apelido) + (p.turma && abaRank !== "turma" ? " <small>" + esc(p.turma) + "</small>" : "") + (NIVEIS[p.nivel] ? " <small>" + NIVEIS[p.nivel].nome + "</small>" : "") + '</span><span class="pt">' + p.pontos + "</span></li>";
+  }).join("") + "</ol>" : "<p>Ninguém pontuou ainda. Termine uma seção para aparecer aqui.</p>") + '<p class="etiqueta" style="margin-top:10px">' + (online ? "Ranking online: atualiza para todos." : "Ranking deste aparelho: mostra só quem jogou aqui.") + "</p>";
+}
+
+/* ---------- PRIMEIRA PÁGINA ---------- */
+function telaFinal() {
+  const r = reportagem();
+  mostra(barra() + '<div class="prelo" aria-hidden="true"><div class="chapa"></div><div class="folhinha"></div></div><section class="papel jornal"><h2 class="cabeca">Jornal da Sala Maker</h2><div class="expediente"><span>Edição fechada no prazo</span><span>Tipografia: ' + esc(J.apelido) + "</span><span>" + total() + " / " + PONTOS_TOTAL + ' pontos</span></div>' + (r ? materia(r) : '<h3 class="manchete">Turma imprime o próprio jornal, letra por letra</h3><p>Sua reportagem ainda não entrou nesta edição. Escreva a sua para ocupar este espaço.</p>') + '<div class="colunas">' + FASES.map(f => '<article><h3>' + f.titulo + "</h3><p>" + f.resumo + " " + desenhaEstrelas(estrelas(J.melhor[f.id] || 0, maxFase(f))) + "</p></article>").join("") + '</div><p class="olho"><b>Desafio para a sala maker:</b> crie o jornal ou fanzine da turma. Escreva as notícias, revise em dupla, faça a capa e imprima na oficina.</p>' + (r ? botoesTexto() : "") + '<div class="linha"><button class="bt" id="edita" type="button">' + (r ? "Editar reportagem" : "Escrever reportagem") + '</button><button class="bt sec" id="r" type="button">Ver ranking</button><button class="bt sec" id="s" type="button">Gaveta</button></div></section>');
+  ligaBarra(telaFinal);
+  ligaTexto();
+  document.getElementById("edita").onclick = telaRedacao;
+  document.getElementById("r").onclick = () => telaRanking(telaFinal);
+  document.getElementById("s").onclick = telaMapa;
+}
+
+telaInicio();
+</script>
+</body>
+</html>

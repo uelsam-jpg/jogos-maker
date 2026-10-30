@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Faz Aí!</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Special+Elite&family=Permanent+Marker&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: páginas de fanzine xerocado, coladas sobre um fundo de capa de disco punk. */
+:root {
+  color-scheme: light;
+  --capa: #FFE500;
+  --tinta: #111111;
+  --papel: #F4F4EF;
+  --xerox: #C9C9C4;
+  --rosa: #FF2E88;
+  --rosa-texto: #B8004F;
+  --verde: #29D17D;
+  --cinza-texto: #4A4A46;
+  --display: "Bowlby One", Impact, "Arial Black", sans-serif;
+  --maquina: "Special Elite", "Courier New", monospace;
+  --marcador: "Permanent Marker", "Comic Sans MS", cursive;
+  --texto: "Atkinson Hyperlegible", Verdana, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background-color: var(--capa);
+  background-image: radial-gradient(rgba(255, 46, 136, .35) 1.6px, transparent 1.7px);
+  background-size: 11px 11px;
+  color: var(--tinta);
+  font: 400 1.0625rem/1.5 var(--texto);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 40px;
+}
+#app { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3, p { margin: 0; }
+h2 { font: 400 clamp(1.6rem, 5vw, 2.3rem)/1.1 var(--display); text-wrap: balance; }
+h3 { font: 400 1.25rem/1.2 var(--display); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--rosa-texto); outline-offset: 2px; }
+
+.folha {
+  position: relative;
+  background: var(--papel);
+  border: 3px solid var(--tinta);
+  box-shadow: 7px 7px 0 var(--tinta);
+  padding: clamp(18px, 4vw, 32px);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.fita::before {
+  content: ""; position: absolute; top: -13px; left: 50%; width: 110px; height: 26px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: rgba(255, 46, 136, .75); border-inline: 2px dashed var(--tinta);
+}
+.etiqueta { font: 400 .9rem/1.3 var(--maquina); letter-spacing: .04em; color: var(--cinza-texto); }
+.rabisco { font: 400 1.2rem/1.25 var(--marcador); color: var(--rosa-texto); transform: rotate(-1.2deg); }
+
+.bt {
+  min-height: 50px; padding: 10px 20px;
+  border: 3px solid var(--tinta); background: var(--papel);
+  font: 400 1.02rem/1.15 var(--display); letter-spacing: .02em;
+  box-shadow: 4px 4px 0 var(--tinta);
+  transition: transform .08s, box-shadow .08s;
+}
+.bt:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--tinta); }
+.bt:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--tinta); }
+.bt:disabled { opacity: .45; cursor: not-allowed; }
+.bt.quente { background: var(--rosa); }
+.bt.preto { background: var(--tinta); color: var(--papel); box-shadow: 4px 4px 0 var(--rosa); }
+.linha { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.linha.fim { justify-content: flex-end; }
+
+/* Título em letras de bilhete recortado */
+.recorte { display: flex; flex-wrap: wrap; gap: 5px; line-height: 1; }
+.recorte span { display: inline-block; padding: .1em .22em; border: 2px solid var(--tinta); font-size: clamp(2.6rem, 13vw, 5.4rem); animation: colar .35s backwards; }
+.recorte.menor span { font-size: clamp(1.5rem, 7vw, 2.8rem); }
+.recorte .e { width: .55em; border: 0; padding: 0; }
+.l0 { background: var(--tinta); color: var(--capa); font-family: var(--display); transform: rotate(-4deg); }
+.l1 { background: var(--papel); font-family: var(--maquina); transform: rotate(3deg); }
+.l2 { background: var(--rosa); font-family: var(--marcador); transform: rotate(-2deg); }
+.l3 { background: var(--capa); font-family: var(--display); transform: rotate(5deg); }
+.l4 { background: var(--xerox); font-family: var(--maquina); transform: rotate(-3deg); }
+@keyframes colar { from { transform: scale(1.7) rotate(14deg); opacity: 0; } }
+
+/* Início */
+.campo { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1 1 200px; }
+.campo label { font: 400 1rem/1.2 var(--display); }
+.campo input { min-height: 50px; width: 100%; padding: 8px 12px; border: 3px solid var(--tinta); background: #fff; font: 400 1.15rem/1.2 var(--maquina); }
+.aviso { border: 2px dashed var(--tinta); padding: 10px 12px; font-size: .95rem; }
+.erro { color: var(--rosa-texto); font-weight: 700; min-height: 1.5em; }
+
+/* Barra do jogador */
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: var(--tinta); color: var(--papel); padding: 8px 12px; font: 400 .98rem/1.2 var(--maquina); }
+.barra strong { font: 400 1.15rem/1 var(--display); color: var(--capa); font-variant-numeric: tabular-nums; }
+.barra .esp { flex: 1; }
+.barra button { min-height: 40px; padding: 4px 10px; background: transparent; border: 2px solid var(--papel); color: var(--papel); font: 400 .9rem/1 var(--maquina); }
+
+/* Sumário das fases */
+.sumario { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr)); gap: 18px; }
+.pagina { text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 14px; background: var(--papel); border: 3px solid var(--tinta); box-shadow: 5px 5px 0 var(--tinta); min-height: 160px; transition: transform .1s; }
+.pagina:nth-child(odd) { transform: rotate(-.8deg); }
+.pagina:nth-child(even) { transform: rotate(.7deg); }
+.pagina:hover:not(:disabled) { transform: rotate(0) translateY(-3px); }
+.pagina:disabled { background: var(--xerox); box-shadow: 5px 5px 0 #6c6c68; cursor: not-allowed; }
+.pagina .num { font: 400 1.9rem/1 var(--display); color: var(--rosa-texto); }
+.pagina:disabled .num { color: var(--cinza-texto); }
+.pagina .tags { font: 400 .82rem/1.25 var(--maquina); color: var(--cinza-texto); }
+.pagina .pe { margin-top: auto; display: flex; justify-content: space-between; gap: 8px; font: 400 .95rem/1.2 var(--maquina); }
+.estrelas { color: var(--rosa-texto); letter-spacing: .08em; }
+
+/* Página de leitura da fase */
+.leitura { display: flex; flex-direction: column; gap: 12px; max-width: 65ch; }
+.destaque { background: var(--tinta); color: var(--capa); padding: 2px 6px; }
+.curiosidade { border-left: 6px solid var(--rosa); padding: 6px 12px; background: #fff; }
+
+/* Perguntas */
+.progresso { display: flex; gap: 4px; }
+.progresso i { flex: 1; height: 10px; border: 2px solid var(--tinta); background: #fff; }
+.progresso i.ok { background: var(--verde); }
+.progresso i.no { background: var(--rosa); }
+.progresso i.ag { background: var(--capa); }
+.enunciado { font-size: clamp(1.15rem, 3.4vw, 1.4rem); line-height: 1.35; font-weight: 700; text-wrap: pretty; }
+.opcoes { display: grid; gap: 10px; }
+.opcoes.duas { grid-template-columns: 1fr 1fr; }
+.op { min-height: 54px; padding: 10px 14px; text-align: left; background: #fff; border: 3px solid var(--tinta); box-shadow: 3px 3px 0 var(--tinta); line-height: 1.3; }
+.op:hover:not(:disabled) { background: var(--capa); }
+.op:disabled { cursor: default; color: var(--tinta); }
+.op.certa { background: var(--verde); font-weight: 700; }
+.op.certa::before { content: "✓ "; }
+.op.errada { background: var(--rosa); font-weight: 700; }
+.op.errada::before { content: "✗ "; }
+.op.apagada { opacity: .5; }
+.duas .op { text-align: center; font: 400 1.05rem/1.15 var(--display); }
+.cartao { position: relative; }
+.cartao.com-carimbo { padding-bottom: 46px; }
+.carimbo { position: absolute; right: 2%; bottom: 0; padding: 4px 12px; border: 4px solid currentColor; font: 400 1.5rem/1 var(--display); transform: rotate(-10deg); background: var(--papel); animation: carimbar .22s; pointer-events: none; }
+.carimbo.bom { color: #006B3C; }
+.carimbo.ruim { color: var(--rosa-texto); }
+@keyframes carimbar { from { transform: rotate(-10deg) scale(2.6); opacity: 0; } }
+.retorno { border: 3px solid var(--tinta); padding: 12px 14px; background: #fff; display: flex; flex-direction: column; gap: 8px; }
+.retorno b { font-family: var(--display); font-weight: 400; }
+.tempo { height: 14px; border: 2px solid var(--tinta); background: #fff; }
+.tempo div { height: 100%; background: var(--rosa); transition: width .25s linear; }
+
+/* Linha do tempo */
+.ordem { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ordem li { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; background: #fff; border: 3px solid var(--tinta); }
+.ordem li > div { min-width: 0; }
+.ordem li.fixa { background: var(--verde); }
+.ordem li.fora { background: #FFD3E5; }
+.ordem .ano { font: 400 1.05rem/1.2 var(--display); }
+.setas { display: flex; gap: 6px; }
+.setas button { width: 46px; height: 46px; border: 3px solid var(--tinta); background: var(--capa); font: 400 1.1rem/1 var(--display); }
+.setas button:disabled { opacity: .3; cursor: not-allowed; }
+
+/* Ligar colunas */
+.pares { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 10px; }
+.pares > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.par { flex: 1 0 auto; min-height: 56px; padding: 8px; text-align: left; background: #fff; border: 3px solid var(--tinta); line-height: 1.25; font-size: 1rem; }
+.par.ferr { font-family: var(--display); font-size: clamp(.78rem, 3.3vw, .98rem); }
+.par[aria-pressed="true"] { background: var(--capa); box-shadow: inset 0 0 0 3px var(--tinta); }
+.par.feito { background: var(--verde); }
+.par.treme { background: var(--rosa); animation: tremer .3s; }
+@keyframes tremer { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+/* Resultado e ranking */
+.placar { font: 400 clamp(2.6rem, 11vw, 4.4rem)/1 var(--display); font-variant-numeric: tabular-nums; }
+.grandes { font-size: 2rem; letter-spacing: .1em; color: var(--rosa-texto); }
+.abas { display: flex; flex-wrap: wrap; gap: 8px; }
+.abas button { min-height: 44px; padding: 6px 12px; background: #fff; border: 3px solid var(--tinta); font: 400 .95rem/1 var(--maquina); }
+.abas button[aria-pressed="true"] { background: var(--tinta); color: var(--capa); }
+.tab { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.tab li { display: grid; grid-template-columns: 2.3em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 7px 10px; background: #fff; border: 2px solid var(--tinta); }
+.tab li.eu { background: var(--capa); border-width: 3px; }
+.tab li:nth-child(1) { background: var(--rosa); }
+.tab .pos { font: 400 1.05rem/1 var(--display); }
+.tab .nm { overflow-wrap: anywhere; font: 400 1.05rem/1.25 var(--maquina); }
+.tab small { color: var(--tinta); font: 400 .8rem/1 var(--maquina); }
+.tab .pt { font: 400 1.05rem/1 var(--display); font-variant-numeric: tabular-nums; }
+
+
+.niveis { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 8px; }
+.niveis legend { font: 400 1rem/1.2 var(--display); padding: 0 0 5px; }
+.nivel { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; background: #fff; border: 3px solid var(--tinta); cursor: pointer; }
+.nivel:has(input:checked) { background: var(--capa); }
+.nivel input { margin: 3px 0 0; accent-color: var(--tinta); }
+.nivel span { display: flex; flex-direction: column; min-width: 0; }
+.nivel b { font: 400 1rem/1.2 var(--display); }
+.nivel small { font-size: .85rem; line-height: 1.25; }
+/* Palco do jogo de plataforma */
+.palco { display: flex; flex-direction: column; gap: 12px; }
+.tela { width: min(100%, calc((100dvh - 150px) * 16 / 9)); margin-inline: auto; border: 3px solid var(--tinta); box-shadow: 6px 6px 0 var(--tinta); background: var(--papel); line-height: 0; }
+.tela canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-action: none; }
+.controles { display: none; justify-content: space-between; align-items: center; gap: 12px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ctl { width: 76px; height: 68px; background: var(--papel); border: 3px solid var(--tinta); box-shadow: 3px 3px 0 var(--tinta); font: 400 1.5rem/1 var(--display); touch-action: none; user-select: none; -webkit-user-select: none; }
+.ctl:active { background: var(--capa); }
+.ctl.pulo { width: 104px; background: var(--rosa); font-size: 1.1rem; }
+.modal { position: fixed; inset: 0; z-index: 20; overflow-y: auto; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); background: rgba(17, 17, 17, .72); }
+.modal .folha { max-width: 640px; margin: 0 auto; animation: colar .18s backwards; }
+.impressora { width: min(100%, 210px); margin-inline: auto; display: block; }
+.impressora .falta * { fill: none; stroke: #8f8f8a; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.impressora .ganha * { fill: var(--tinta); stroke: var(--tinta); stroke-width: 1.5; }
+.impressora .ganha path:last-child { fill: none; stroke: var(--rosa-texto); stroke-width: 4; }
+@media (pointer: coarse) {
+  .controles { display: flex; }
+  .dica { display: none; }
+}
+@media (pointer: coarse) and (orientation: landscape) {
+  .tela { position: relative; width: min(100%, calc((100dvh - 80px) * 16 / 9)); }
+  .controles { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: 10px; z-index: 5; pointer-events: none; }
+  .ctl { pointer-events: auto; opacity: .78; }
+}
+@media (max-width: 460px) {
+  .opcoes.duas { grid-template-columns: 1fr; }
+  .folha { box-shadow: 5px 5px 0 var(--tinta); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script>
+"use strict";
+/* ---------- CONTEÚDO DO JOGO: edite aqui para ajustar textos e perguntas ---------- */
+const FASES = [
+  { id: 1, tipo: "escolha", ano: "Londres, 1976", titulo: "A garagem punk", tags: "História · Artes",
+    leitura: [
+      "Meados dos anos 1970. Em Londres e Nova York, a juventude está sem dinheiro e sem paciência. As grandes gravadoras escolhem quem pode tocar. As revistas escolhem sobre o que se pode falar.",
+      "O punk responde: <span class=\"destaque\">não espere permissão.</span> Sabe três acordes? Monte uma banda. Ninguém escreve sobre sua turma? Faça sua própria revista. Essa atitude ganhou uma sigla: DIY, de <em>Do It Yourself</em>, ou “Faça Você Mesmo”.",
+      "A expressão já existia em revistas de reforma caseira. O punk transformou uma dica doméstica em postura diante do mundo."
+    ],
+    curiosidade: "Um fanzine punk de 1977 chamado Sideburns publicou o desenho de três acordes de guitarra e mandou o leitor formar uma banda. Era o tutorial da época!",
+    itens: [
+      { q: "O que significa a sigla DIY?", o: ["Do It Yourself: faça você mesmo", "Design In Youth: design na juventude", "Digital Industry Yard: pátio da indústria digital", "Dance In Yards: dance nos quintais"], a: 0, p: "DIY vem do inglês Do It Yourself. Essa é a frase que liga o punk à sala maker." },
+      { q: "Uma banda punk não tem contrato com gravadora. O que o espírito DIY manda fazer?", o: ["Gravar e lançar o disco por conta própria", "Desistir e esperar um convite", "Tocar só músicas de bandas famosas", "Pagar uma grande empresa para mudar o som"], a: 0, p: "Em 1977, os Buzzcocks lançaram o disco Spiral Scratch com dinheiro emprestado de família e amigos e sem gravadora grande." },
+      { q: "O que é um fanzine?", o: ["Uma revista independente feita por fãs", "Um tipo de guitarra elétrica", "Um aplicativo de música", "Um jornal oficial do governo"], a: 0, p: "A palavra junta fan (fã) e magazine (revista). É um gênero textual: tem capa, colagem, opinião e linguagem própria." },
+      { q: "Quais ferramentas tornavam o fanzine barato de produzir?", o: ["Tesoura, cola, máquina de escrever e fotocopiadora", "Impressora 3D e cortadora a laser", "Rotativa de jornal e papel especial", "Câmera de cinema e estúdio de TV"], a: 0, p: "Era tecnologia simples e acessível. A lição continua valendo: comece com o que você tem." },
+      { q: "O punk também chegou ao Brasil. Em qual cidade aconteceu o festival “O Começo do Fim do Mundo”, em 1982?", o: ["São Paulo", "Manaus", "Recife", "Florianópolis"], a: 0, p: "O festival ocorreu no SESC Pompeia, em São Paulo, e reuniu bandas punks da cena brasileira." }
+    ] },
+  { id: 2, tipo: "carimbo", ano: "Mesa de recorte", titulo: "Verdade ou lenda?", tags: "História · Tecnologia", botoes: ["Verdade", "Lenda"],
+    leitura: [
+      "O punk é uma das raízes da cultura maker, e existem outras. Clubes de computador feitos em casa, hackers, artesãos, inventores de garagem e professores que ensinam construindo ajudaram a formar esse movimento.",
+      "Na mesa de recorte chegaram várias notas soltas. Algumas são verdade. Outras são lenda. Leia com calma e carimbe cada uma."
+    ],
+    curiosidade: "Quem acerta várias seguidas ganha bônus de sequência. Vale ler antes de carimbar!",
+    itens: [
+      { q: "A cultura maker tem uma única origem: o movimento punk.", a: 1, p: "O punk deu a atitude DIY, mas o movimento também vem de hackers, clubes de eletrônica, artesanato e educação." },
+      { q: "Steve Wozniak e Steve Jobs frequentaram um clube de amadores de computador chamado Homebrew.", a: 0, p: "O Homebrew Computer Club começou em 1975, na Califórnia. Os participantes trocavam peças, ideias e projetos." },
+      { q: "A ideia dos Fab Labs surgiu no MIT, ligada à disciplina “Como fazer (quase) qualquer coisa”.", a: 0, p: "Neil Gershenfeld criou a disciplina no MIT. Hoje existem Fab Labs em dezenas de países." },
+      { q: "Só é maker quem tem uma impressora 3D.", a: 1, p: "Papelão, sucata e curiosidade já bastam. Ser maker tem a ver com atitude de criar, testar e compartilhar." },
+      { q: "A gambiarra brasileira tem parentesco com o espírito maker.", a: 0, p: "As duas resolvem problemas com criatividade e pouco recurso. O maker acrescenta teste, documentação, segurança e compartilhamento." },
+      { q: "A primeira Maker Faire, a grande feira de makers, aconteceu no Brasil.", a: 1, p: "A primeira foi em 2006, em San Mateo, na Califórnia. Hoje existem edições em vários países." },
+      { q: "A impressora 3D foi inventada nos anos 2000.", a: 1, p: "Chuck Hull desenvolveu a estereolitografia nos anos 1980. Nos anos 2000, projetos abertos como o RepRap ajudaram a baratear essas máquinas." },
+      { q: "A revista Make:, lançada em 2005 nos Estados Unidos, ajudou a popularizar o termo “maker”.", a: 0, p: "Fundada por Dale Dougherty, a revista mostrava projetos para qualquer pessoa construir em casa." },
+      { q: "O Scratch, usado para aprender programação com blocos, foi criado no MIT.", a: 0, p: "Foi lançado em 2007 pelo grupo Lifelong Kindergarten, do MIT Media Lab, e é gratuito." }
+    ] },
+  { id: 3, tipo: "escolha", ano: "1968 a 2007", titulo: "Linha do tempo", tags: "História",
+    leitura: [
+      "A cultura maker foi se formando aos poucos. Em 1968, o Whole Earth Catalog reunia ferramentas e ideias para fazer por conta própria. Em 1975, o Homebrew Computer Club juntava amadores de computador na Califórnia. Em 1976, o fanzine punk Sniffin’ Glue circulava em Londres.",
+      "Por volta de 2001 surgiram os Fab Labs, ligados ao MIT. Em 2005 chegou a revista Make: e, em 2007, o Scratch. Guarde essa ordem: cada peça desta fase pergunta sobre ela."
+    ],
+    curiosidade: "Quase 40 anos separam o catálogo de 1968 do Scratch, e a ideia de aprender fazendo atravessou todo esse período.",
+    itens: [
+      { q: "Qual destes surgiu primeiro?", o: ["Whole Earth Catalog", "Scratch", "Revista Make:", "Fab Lab"], a: 0, p: "O Whole Earth Catalog é de 1968, o mais antigo da lista." },
+      { q: "Em qual década começou o Homebrew Computer Club?", o: ["Anos 1970", "Anos 1950", "Anos 1990", "Anos 2010"], a: 0, p: "O clube começou em 1975, na Califórnia." },
+      { q: "Em que ano o fanzine punk Sniffin’ Glue apareceu em Londres?", o: ["1976", "1956", "1996", "2016"], a: 0, p: "Foi em 1976, no auge do início do punk britânico." },
+      { q: "Qual destes apareceu depois da revista Make:?", o: ["Scratch", "Homebrew Computer Club", "Sniffin’ Glue", "Whole Earth Catalog"], a: 0, p: "A Make: é de 2005 e o Scratch foi lançado em 2007." },
+      { q: "Os Fab Labs começaram por volta de qual ano?", o: ["2001", "1961", "1981", "2021"], a: 0, p: "Eles surgiram no início dos anos 2000, ligados ao MIT." },
+      { q: "Qual sequência está na ordem certa?", o: ["Sniffin’ Glue, Fab Lab, Scratch", "Scratch, Fab Lab, Sniffin’ Glue", "Fab Lab, Scratch, Sniffin’ Glue", "Scratch, Sniffin’ Glue, Fab Lab"], a: 0, p: "1976, depois cerca de 2001, depois 2007." }
+    ] },
+  { id: 4, tipo: "escolha", ano: "Sala maker", titulo: "Caixa de ferramentas", tags: "Ciências · Tecnologia",
+    leitura: [
+      "O punk tinha tesoura e xerox. A sala maker tem outras ferramentas, mas a pergunta é a mesma: o que eu consigo criar com o que tenho aqui?",
+      "Cada peça desta fase pergunta para que serve uma ferramenta da oficina."
+    ],
+    curiosidade: "A impressora 3D mais comum nas escolas derrete um filamento plástico e constrói a peça em camadas muito finas.",
+    itens: [
+      { q: "Qual ferramenta cria objetos camada por camada a partir de um modelo digital?", o: ["Impressora 3D", "Ferro de solda", "Scratch", "Papelão e cola"], a: 0, p: "A impressora 3D deposita material em camadas até formar a peça." },
+      { q: "Qual ferramenta corta e grava chapas de MDF ou acrílico com alta precisão?", o: ["Cortadora a laser", "Arduino", "Impressora 3D", "Scratch"], a: 0, p: "O feixe de laser corta seguindo um desenho feito no computador." },
+      { q: "O que é uma placa programável que lê sensores e controla luzes e motores?", o: ["Arduino", "Ferro de solda", "Cortadora a laser", "Filamento"], a: 0, p: "O Arduino surgiu em 2005, na Itália, para facilitar projetos de eletrônica." },
+      { q: "O que ensina programação encaixando blocos na tela?", o: ["Scratch", "Arduino", "Cortadora a laser", "Impressora 3D"], a: 0, p: "No Scratch, cada bloco é uma instrução. É uma boa porta de entrada para programar." },
+      { q: "Qual ferramenta une componentes eletrônicos com metal derretido?", o: ["Ferro de solda", "Scratch", "Impressora 3D", "Papelão e cola"], a: 0, p: "A ponta fica muito quente, então só use com orientação e proteção." },
+      { q: "Qual é a opção mais rápida e barata para testar uma ideia?", o: ["Papelão e cola", "Cortadora a laser", "Chapa de acrílico", "Placa de circuito"], a: 0, p: "Protótipo de papelão mostra os problemas antes de gastar material caro." }
+    ] },
+  { id: 5, tipo: "carimbo", ano: "2013", titulo: "Manifesto maker", tags: "Sociologia · Ética", botoes: ["Atitude maker", "Não é por aí"],
+    leitura: [
+      "Em 2013, Mark Hatch publicou o Manifesto do Movimento Maker. Algumas das ideias: fazer, compartilhar, doar, aprender, brincar, participar e mudar.",
+      "Agora é sua vez de avaliar. Cada cartão mostra uma atitude na oficina. Ela combina com o espírito maker?"
+    ],
+    curiosidade: "Na sala maker, errar faz parte do processo. Um protótipo quebrado mostra o que precisa melhorar.",
+    itens: [
+      { q: "Publicar como você fez seu projeto para que outras pessoas possam copiar e melhorar.", a: 0, p: "Compartilhar é o coração do movimento. Fanzines punks também circulavam de mão em mão." },
+      { q: "Errar, descobrir o motivo e tentar de novo.", a: 0, p: "Esse ciclo se chama iteração. É assim que protótipos melhoram." },
+      { q: "Reaproveitar sucata para construir uma peça do projeto.", a: 0, p: "Usar o que está disponível reduz custo e lixo. É o DIY na prática." },
+      { q: "Parar sua tarefa um instante para ajudar um colega travado.", a: 0, p: "Ensinar também faz aprender. A oficina é um trabalho coletivo." },
+      { q: "Ligar uma máquina sem saber as regras de segurança, para ganhar tempo.", a: 1, p: "Liberdade para criar exige cuidado. Primeiro aprenda a usar a ferramenta com orientação." },
+      { q: "Esconder o que aprendeu para ninguém passar à sua frente.", a: 1, p: "A cultura maker cresce quando o conhecimento circula." },
+      { q: "Desistir porque o primeiro protótipo quebrou.", a: 1, p: "O primeiro protótipo existe para ser testado. A falha traz informação." },
+      { q: "Usar o projeto de outra pessoa e dizer que a ideia foi toda sua.", a: 1, p: "Pode usar e melhorar, quando a licença permitir, mas sempre dando o crédito." }
+    ] },
+  { id: 6, tipo: "tempo", ano: "Fase final", titulo: "Feira maker", tags: "Todas as disciplinas",
+    leitura: [
+      "Chegou o dia da feira! Visitantes vão fazer perguntas e cada uma tem um tempo limite para ser respondida.",
+      "Quanto mais rápido responder, maior o bônus. Use tudo o que aprendeu desde a garagem punk."
+    ],
+    curiosidade: "Se o tempo acabar, a pergunta conta como erro.",
+    itens: [
+      { q: "O bebedouro da escola vive com água no chão. Qual é o primeiro passo maker?", o: ["Observar e entender o problema", "Imprimir uma peça qualquer em 3D", "Comprar um bebedouro novo", "Reclamar no grupo da turma"], a: 0, p: "Todo bom projeto começa por entender o problema e quem é afetado por ele." },
+      { q: "Seu protótipo quebrou no meio da apresentação. O que fazer?", o: ["Investigar a falha e explicar o que vai melhorar", "Esconder o protótipo", "Culpar o colega", "Dizer que era para quebrar mesmo"], a: 0, p: "Contar o que deu errado e como vai corrigir mostra o processo de aprendizagem." },
+      { q: "Você se inspirou em um projeto da internet. Qual é a atitude certa?", o: ["Dar crédito e respeitar a licença", "Apagar o nome do autor", "Dizer que inventou tudo", "Vender sem avisar ninguém"], a: 0, p: "Compartilhar e dar crédito são práticas que andam juntas." },
+      { q: "Qual educador ficou conhecido pela ideia de aprender construindo (construcionismo)?", o: ["Seymour Papert", "Isaac Newton", "Charles Darwin", "Machado de Assis"], a: 0, p: "Papert, do MIT, defendia que se aprende melhor ao construir algo com significado." },
+      { q: "Você quer testar o formato de uma caixa antes de cortar no MDF. O que usar primeiro?", o: ["Um modelo de papelão", "A chapa mais cara", "Um bloco de metal", "Nada: é só cortar direto"], a: 0, p: "Protótipo rápido e barato evita desperdício." },
+      { q: "O que você deve fazer antes de usar a cortadora a laser?", o: ["Receber orientação e usar com supervisão", "Ligar e ver o que acontece", "Tirar a tampa de proteção", "Cortar qualquer material que achar"], a: 0, p: "Alguns materiais liberam gases tóxicos ao serem cortados. Segurança vem primeiro." },
+      { q: "O que une o punk de 1977 e a sala maker de hoje?", o: ["Criar sem esperar permissão e compartilhar", "O gosto pelo mesmo estilo de música", "O uso de impressoras 3D", "O uso de roupas pretas"], a: 0, p: "Mudam as ferramentas e continua a atitude: faça você mesmo e passe adiante." }
+    ] }
+];
+
+const PONTOS_MIN_FASE = 0.5;
+const PALAVROES = ["porra","caralho","merda","puta","viado","buceta","bosta","foda","piroca","cacete","arrombado","babaca","otario","vagabund","corno","fdp","vsf","pqp","nazi","hitler"];
+const NOMES_A = ["Parafuso","Fita Crepe","Cola Quente","Sucata","LED","Filamento","Papelão","Alicate","Sensor","Motorzinho","Grampo","Xerox"];
+const NOMES_B = ["Turbo","Veloz","Punk","Elétrico","Maluco","Radical","Ligeiro","Faísca","Ninja","Sônico"];
+
+const maxFase = f => {
+  const seq = n => { let s = 0; for (let i = 0; i < n; i++) s += 100 + Math.min(i * 10, 50); return s; };
+  return seq(f.itens.length) + (f.tipo === "tempo" ? f.itens.length * 50 : 0);
+};
+const PONTOS_TOTAL = FASES.reduce((s, f) => s + maxFase(f), 0);
+
+/* ---------- ESTADO ---------- */
+const app = document.getElementById("app");
+let J = { apelido: "", turma: "", melhor: {} };
+let som = true, timer = null, abaRank = "turma";
+
+const guarda = {
+  ler(k, pad) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : pad; } catch { return pad; } },
+  por(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mistura = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const total = () => Object.values(J.melhor).reduce((s, n) => s + n, 0);
+const passou = f => (J.melhor[f.id] || 0) >= maxFase(f) * PONTOS_MIN_FASE;
+const liberada = f => f.id === 1 || passou(FASES[f.id - 2]);
+const estrelas = (p, m) => { const r = p / m; return r >= .9 ? 3 : r >= .7 ? 2 : r >= .5 ? 1 : 0; };
+const desenhaEstrelas = n => "★".repeat(n) + "☆".repeat(3 - n);
+const salvar = () => { guarda.por("fazai2:j:" + J.turma + ":" + J.apelido.toLowerCase(), J.melhor); guarda.por("fazai:ultimo", { apelido: J.apelido, turma: J.turma, nivel: nivelAtual }); };
+const limpaTimer = () => { if (timer) { clearInterval(timer); timer = null; } };
+
+const normaliza = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const proibido = s => { const n = normaliza(s).replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a"); return PALAVROES.some(p => n.includes(p)); };
+
+function bipPulo() {
+  if (!som) return;
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    const c = bip.c || (bip.c = new C()), o = c.createOscillator(), g = c.createGain();
+    o.type = "square"; o.frequency.setValueAtTime(300, c.currentTime); o.frequency.linearRampToValueAtTime(520, c.currentTime + .1);
+    g.gain.setValueAtTime(.025, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .12);
+    o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + .12);
+  } catch {}
+}
+function bip(ok) {
+  if (!som) return;
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    const c = bip.c || (bip.c = new C()), o = c.createOscillator(), g = c.createGain();
+    o.type = "square"; o.frequency.value = ok ? 660 : 130;
+    if (ok) o.frequency.setValueAtTime(990, c.currentTime + .08);
+    g.gain.setValueAtTime(.05, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .22);
+    o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + .22);
+  } catch {}
+}
+function mostra(html) { limpaTimer(); pararJogo(); document.querySelectorAll(".modal").forEach(m => m.remove()); app.innerHTML = html; window.scrollTo(0, 0); }
+const recorte = (txt, menor) => '<div class="recorte' + (menor ? " menor" : "") + '" role="img" aria-label="' + esc(txt) + '">' +
+  [...txt].map((c, i) => c === " " ? '<span class="e"></span>' : '<span class="l' + (i * 3 + c.charCodeAt(0)) % 5 + '" aria-hidden="true" style="animation-delay:' + i * 45 + 'ms">' + esc(c) + "</span>").join("") + "</div>";
+const barra = () => '<div class="barra"><span>' + esc(J.apelido) + (J.turma ? " · " + esc(J.turma) : "") + " · " + DIF.nome + '</span><span>Pontos: <strong>' + total() + '</strong></span><span class="esp"></span>' +
+  '<button id="b-som" type="button" aria-pressed="' + som + '">Som: ' + (som ? "ligado" : "desligado") + '</button><button id="b-rank" type="button">Ranking</button></div>';
+function ligaBarra(voltar) {
+  document.getElementById("b-som").onclick = e => { som = !som; e.target.textContent = "Som: " + (som ? "ligado" : "desligado"); e.target.setAttribute("aria-pressed", som); };
+  document.getElementById("b-rank").onclick = () => telaRanking(voltar);
+}
+
+/* ---------- TELA INICIAL ---------- */
+function telaInicio() {
+  const u = guarda.ler("fazai:ultimo", { apelido: "", turma: "" });
+  mostra('<section class="folha fita">' + recorte("FAZ AÍ!") +
+    '<p class="rabisco">do punk à impressora 3D: a história da cultura maker</p>' +
+    '<p>Corra, pule os obstáculos e pegue as peças impressas em 3D. Cada peça traz uma pergunta sobre como jovens com tesoura, cola e xerox ajudaram a criar a cultura maker. Termine as seis fases para montar sua impressora 3D!</p>' +
+    '<form id="f" class="leitura" style="max-width:none" novalidate>' +
+    '<div class="linha" style="align-items:flex-start">' +
+      '<div class="campo"><label for="apelido">Seu apelido</label><input id="apelido" maxlength="16" autocomplete="off" value="' + esc(u.apelido) + '"></div>' +
+      '<div class="campo"><label for="turma">Turma (opcional)</label><input id="turma" maxlength="8" autocomplete="off" placeholder="Ex.: 7A" value="' + esc(u.turma) + '"></div>' +
+    '</div>' + (NIVEL_FIXO ? '<p class="etiqueta">Nível desta turma: ' + DIFICULDADES[NIVEL_FIXO].nome + '</p>' :
+      '<fieldset class="niveis"><legend>Nível</legend>' + Object.keys(DIFICULDADES).map(k => '<label class="nivel"><input type="radio" name="nivel" value="' + k + '"' + (k === (DIFICULDADES[u.nivel] ? u.nivel : "normal") ? " checked" : "") + '><span><b>' + DIFICULDADES[k].nome + '</b><small>' + DIFICULDADES[k].resumo + '</small></span></label>').join("") + '</fieldset>') +
+    '<p id="erro" class="erro" role="alert"></p>' +
+    '<div class="linha"><button class="bt quente" type="submit">Começar</button><button class="bt" type="button" id="sorteia">Sortear apelido</button></div></form>' +
+    '<p class="aviso"><b>Proteja seus dados:</b> use só um apelido. Não coloque nome completo, telefone, e-mail ou outra informação pessoal. O ranking guarda apenas apelido, turma e pontos.</p></section>');
+  document.getElementById("sorteia").onclick = () => {
+    const a = NOMES_A[Math.floor(Math.random() * NOMES_A.length)], b = NOMES_B[Math.floor(Math.random() * NOMES_B.length)];
+    const n = (a + " " + b); document.getElementById("apelido").value = n.length <= 16 ? n : a;
+  };
+  document.getElementById("f").onsubmit = e => {
+    e.preventDefault();
+    const ap = document.getElementById("apelido").value.trim().replace(/\s+/g, " ");
+    const tu = document.getElementById("turma").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    const er = document.getElementById("erro");
+    if (ap.length < 3) { er.textContent = "Escreva um apelido com pelo menos 3 letras."; return; }
+    if (!/^[\p{L}\p{N} ]+$/u.test(ap)) { er.textContent = "Use apenas letras, números e espaços no apelido."; return; }
+    if (proibido(ap)) { er.textContent = "Esse apelido não pode ser usado. Escolha outro ou sorteie um."; return; }
+    nivelAtual = NIVEL_FIXO || (document.querySelector('[name="nivel"]:checked') || {}).value || "normal";
+    DIF = DIFICULDADES[nivelAtual];
+    J = { apelido: ap, turma: tu, melhor: guarda.ler("fazai2:j:" + tu + ":" + ap.toLowerCase(), {}) };
+    salvar(); telaMapa();
+  };
+}
+
+/* ---------- SUMÁRIO DE FASES ---------- */
+function telaMapa() {
+  const tudo = FASES.every(passou);
+  mostra(barra() + '<section class="folha"><div><p class="etiqueta">Edição nº 1 · Sumário</p><h2>Escolha sua página</h2></div>' + impressora() + '<p class="etiqueta" style="text-align:center">Cada fase concluída entrega uma parte da impressora: ' + FASES.filter(passou).length + ' de 6.</p>' +
+    '<p>Faça pelo menos metade dos pontos em uma fase para ganhar a parte da impressora e abrir a próxima. Você pode repetir qualquer fase: vale sempre sua melhor pontuação.</p>' +
+    '<div class="sumario">' + FASES.map(f => {
+      const ok = liberada(f), p = J.melhor[f.id] || 0;
+      return '<button class="pagina" type="button" data-f="' + f.id + '"' + (ok ? "" : " disabled") + '><span class="num">' + f.id + '</span>' +
+        '<h3>' + f.titulo + '</h3><span class="tags">' + f.ano + " · " + f.tags + '</span>' +
+        '<span class="pe"><span>' + (ok ? p + " / " + maxFase(f) : "Trancada") + '</span><span class="estrelas" aria-label="' + estrelas(p, maxFase(f)) + ' de 3 estrelas">' + (ok ? desenhaEstrelas(estrelas(p, maxFase(f))) : "") + '</span></span></button>';
+    }).join("") + '</div>' +
+    '<div class="linha">' + (tudo ? '<button class="bt quente" id="capa" type="button">Ver minha capa final</button>' : "") + '<button class="bt" id="troca" type="button">Trocar apelido</button></div></section>');
+  ligaBarra(telaMapa);
+  app.querySelectorAll("[data-f]").forEach(b => b.onclick = () => telaLeitura(FASES[b.dataset.f - 1]));
+  document.getElementById("troca").onclick = telaInicio;
+  if (tudo) document.getElementById("capa").onclick = telaFinal;
+}
+
+function telaLeitura(f) {
+  mostra(barra() + '<section class="folha fita"><div><p class="etiqueta">Fase ' + f.id + " de " + FASES.length + " · " + f.ano + " · " + f.tags + '</p><h2>' + f.titulo + '</h2></div>' +
+    '<div class="leitura">' + f.leitura.map(t => "<p>" + t + "</p>").join("") + '<p class="curiosidade"><b>Curiosidade:</b> ' + f.curiosidade + '</p><p class="aviso"><b>Como jogar:</b> setas ou A e D para andar, espaço ou W para pular. No celular, use os botões na tela. Bater em um obstáculo tira ' + DIF.pena + ' pontos. Pegue todas as peças para abrir a porta da oficina.</p></div>' +
+    '<div class="linha"><button class="bt quente" id="vai" type="button">Correr!</button><button class="bt" id="volta" type="button">Voltar ao sumário</button></div></section>');
+  ligaBarra(() => telaLeitura(f));
+  document.getElementById("volta").onclick = telaMapa;
+  document.getElementById("vai").onclick = () => {
+    jogaFase(f);
+  };
+}
+
+/* ---------- JOGO DE PLATAFORMA ---------- */
+const TELA_L = 640, TELA_A = 360, CHAO = 300, P_L = 22, P_A = 34;
+/* Ajuste de cada nível: tempo das perguntas, perda de pontos, força do pulo, folga do pulo, ritmo dos obstáculos, tamanho de vãos e pregos. */
+const DIFICULDADES = {
+  facil: { nome: "Fácil", resumo: "Obstáculos lentos e vãos menores", tempo: 20, pena: 10, pulo: 11, folga: 10, ritmo: 1.5, vao: -20, pregos: 56 },
+  normal: { nome: "Normal", resumo: "O desafio padrão", tempo: 15, pena: 25, pulo: 10.4, folga: 8, ritmo: 1, vao: 0, pregos: 84 },
+  dificil: { nome: "Difícil", resumo: "Obstáculos rápidos e vãos maiores", tempo: 10, pena: 40, pulo: 10.4, folga: 6, ritmo: .75, vao: 12, pregos: 98 }
+};
+let DIF = DIFICULDADES.normal, nivelAtual = "normal";
+const NIVEL_FIXO = (() => { try { const n = new URLSearchParams(location.search).get("nivel"); return DIFICULDADES[n] ? n : null; } catch { return null; } })();
+/* Sequência de trechos de cada fase: um trecho e uma peça para cada pergunta. */
+const TRECHOS = {
+  1: ["plano", "vao", "pregos", "escada", "inimigo"],
+  2: ["plano", "pregos", "vao", "escada", "inimigo", "vao", "prensa", "pregos", "pilha"],
+  3: ["vao", "escada", "prensa", "inimigo", "pilha", "elevador"],
+  4: ["pregos", "inimigo", "elevador", "prensa", "escada", "pilha"],
+  5: ["vao", "inimigo", "pregos", "prensa", "elevador", "escada", "inimigo", "pilha"],
+  6: ["inimigo", "prensa", "elevador", "pilha", "pregos", "inimigo", "elevador"]
+};
+const TEMAS = {
+  1: { papel: "#F4F4EF", bloco: "#FF2E88", inimigo: "terno", cartazes: ["DIY", "PUNK", "3 ACORDES", "FAÇA VOCÊ MESMO"] },
+  2: { papel: "#FFF7A8", bloco: "#FFFFFF", inimigo: "tesoura", cartazes: ["FANZINE", "RECORTE", "COLA", "XEROX"] },
+  3: { papel: "#D8F5E5", bloco: "#29D17D", inimigo: "robo", cartazes: ["1968", "1975", "1976", "2001", "2005", "2007"] },
+  4: { papel: "#DCE9FF", bloco: "#FFE500", inimigo: "robo", cartazes: ["ARDUINO", "LASER", "SOLDA", "SCRATCH"] },
+  5: { papel: "#FFE0EE", bloco: "#FFE500", inimigo: "terno", cartazes: ["FAZER", "COMPARTILHAR", "APRENDER", "MUDAR"] },
+  6: { papel: "#FFE9C7", bloco: "#FF2E88", inimigo: "tesoura", cartazes: ["FEIRA MAKER", "PROTÓTIPO", "TESTE", "MELHORE"] }
+};
+const PECAS_IMPRESSORA = ["Estrutura", "Eixos", "Mesa", "Bico extrusor", "Filamento", "Placa controladora"];
+
+const onda = (t, per) => { const m = (t % per) / per; return m < .5 ? m * 2 : 2 - m * 2; };
+const xInimigo = (e, t) => e.x0 + (e.x1 - e.x0) * onda(t, 480 * DIF.ritmo);
+const yPrensa = (p, t) => p.y0 + (p.y1 - p.y0) * onda(t, 240 * DIF.ritmo);
+const xElevador = (m, t) => m.x0 + (m.x1 - m.x0) * onda(t, 480 * DIF.ritmo);
+
+function criaNivel(id) {
+  const L = { solidos: [], pregos: [], inimigos: [], prensas: [], elevadores: [], pecas: [], marcos: [], largura: 0 };
+  const chao = (x, w, alto = 0) => L.solidos.push({ x, y: CHAO - alto, w, h: 200 + alto, chao: true });
+  const bloco = (x, y, w) => L.solidos.push({ x, y, w, h: 18 });
+  const peca = (x, y) => L.pecas.push({ x, y, pega: false });
+  const FAZ = {
+    plano(x) { chao(x, 340); peca(x + 180, CHAO - 26); return 340; },
+    vao(x) { const v = 95 + DIF.vao; chao(x, 120); chao(x + 120 + v, 125); peca(x + 120 + v / 2, CHAO - 72); return 245 + v; },
+    pregos(x) { chao(x, 380); L.pregos.push({ x: x + 190 - DIF.pregos / 2, w: DIF.pregos }); peca(x + 190, CHAO - 74); return 380; },
+    escada(x) { chao(x, 430); bloco(x + 100, CHAO - 60, 85); bloco(x + 215, CHAO - 115, 85); peca(x + 258, CHAO - 150); return 430; },
+    inimigo(x) { chao(x, 440); L.inimigos.push({ x0: x + 130, x1: x + 370, morto: false }); peca(x + 250, CHAO - 28); return 440; },
+    prensa(x) { chao(x, 370); L.prensas.push({ x: x + 165, w: 52, y0: CHAO - 190, y1: CHAO - 2 }); peca(x + 300, CHAO - 28); return 370; },
+    elevador(x) { chao(x, 90); L.elevadores.push({ x0: x + 98, x1: x + 252, y: CHAO - 4, w: 80 }); chao(x + 340, 100); peca(x + 215, CHAO - 72); return 440; },
+    pilha(x) { const v = 70 + DIF.vao / 2; chao(x, 85); chao(x + 85 + v, 60, 40); chao(x + 145 + v * 2, 60, 80); chao(x + 205 + v * 3, 90); peca(x + 175 + v * 2, CHAO - 130); return 295 + v * 3; }
+  };
+  chao(0, 200);
+  let x = 200;
+  TRECHOS[id].forEach(n => { L.marcos.push(x); x += FAZ[n](x); });
+  chao(x, 280);
+  L.porta = { x: x + 170, y: CHAO - 70, w: 54, h: 70 };
+  L.largura = x + 280;
+  return L;
+}
+
+const novoJogador = x => ({ x, y: CHAO - P_A, vx: 0, vy: 0, chao: false, co: 0, jb: 0, sobre: -1, face: 1 });
+const toca = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+/* Um quadro de física. É puro em relação ao tempo t, por isso também serve para o teste de vitória. */
+function passo(p, ent, t, L) {
+  if (ent.d) { p.vx = Math.min(3.6, p.vx + .7); p.face = 1; }
+  else if (ent.e) { p.vx = Math.max(-3.6, p.vx - .7); p.face = -1; }
+  else { p.vx *= .7; if (Math.abs(p.vx) < .1) p.vx = 0; }
+  p.jb = ent.jp ? DIF.folga : Math.max(0, p.jb - 1);
+  p.co = p.chao ? DIF.folga : Math.max(0, p.co - 1);
+  if (p.jb > 0 && p.co > 0) { p.vy = -DIF.pulo; p.jb = 0; p.co = 0; p.chao = false; p.sobre = -1; }
+  p.vy = Math.min(12, p.vy + (p.vy < 0 && !ent.j ? 1.1 : p.vy > 0 ? .62 : .55));
+  if (p.sobre >= 0) { const m = L.elevadores[p.sobre]; p.x += xElevador(m, t + 1) - xElevador(m, t); }
+  p.x = Math.max(0, Math.min(L.largura - P_L, p.x + p.vx));
+  let c = { x: p.x, y: p.y, w: P_L, h: P_A };
+  for (const s of L.solidos) if (toca(c, s)) { p.x = p.vx > 0 ? s.x - P_L : p.vx < 0 ? s.x + s.w : (p.x + P_L / 2 < s.x + s.w / 2 ? s.x - P_L : s.x + s.w); p.vx = 0; c.x = p.x; }
+  const yAntes = p.y;
+  p.y += p.vy; p.chao = false; p.sobre = -1; c = { x: p.x, y: p.y, w: P_L, h: P_A };
+  for (const s of L.solidos) if (toca(c, s)) {
+    if (p.vy > 0) { p.y = s.y - P_A; p.chao = true; } else p.y = s.y + s.h;
+    p.vy = 0; c.y = p.y;
+  }
+  if (p.vy >= 0) L.elevadores.forEach((m, i) => {
+    const mx = xElevador(m, t + 1);
+    if (yAntes + P_A <= m.y + 1 && p.y + P_A >= m.y && p.x + P_L > mx && p.x < mx + m.w) { p.y = m.y - P_A; p.vy = 0; p.chao = true; p.sobre = i; }
+  });
+}
+function doeu(p, t, L) {
+  if (p.y > TELA_A + 40) return true;
+  const c = { x: p.x + 2, y: p.y + 2, w: P_L - 4, h: P_A - 2 };
+  return L.pregos.some(s => toca(c, { x: s.x + 2, y: CHAO - 13, w: s.w - 4, h: 13 })) ||
+    L.inimigos.some(e => !e.morto && toca(c, { x: xInimigo(e, t) + 3, y: CHAO - 30, w: 26, h: 30 })) ||
+    L.prensas.some(r => toca(c, { x: r.x, y: 0, w: r.w, h: yPrensa(r, t) }));
+}
+
+/* ---------- DESENHO ---------- */
+function linhas(g, x, y, w, h, cor) { g.fillStyle = cor; for (let i = y + 4; i < y + h; i += 5) g.fillRect(x, i, w, 1); }
+function desenhaPeca(g, x, y, i, t) {
+  const b = Math.sin(t / 14 + i) * 3, a = t / 30;
+  g.save(); g.translate(x, y + b);
+  g.fillStyle = "rgba(255,46,136,.28)"; g.beginPath(); g.arc(0, 0, 18 + Math.sin(t / 10) * 2, 0, 7); g.fill();
+  g.lineWidth = 2.5; g.strokeStyle = "#111"; g.fillStyle = "#FF2E88";
+  const tipo = i % 3;
+  if (tipo === 0) { /* engrenagem */
+    g.rotate(a); g.beginPath();
+    for (let k = 0; k < 16; k++) { const r = k % 2 ? 12 : 8.5, an = k * Math.PI / 8; g.lineTo(Math.cos(an) * r, Math.sin(an) * r); }
+    g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = "#FFE500"; g.beginPath(); g.arc(0, 0, 3.5, 0, 7); g.fill(); g.stroke();
+  } else if (tipo === 1) { /* porca sextavada */
+    g.rotate(a); g.beginPath();
+    for (let k = 0; k < 6; k++) g.lineTo(Math.cos(k * Math.PI / 3) * 12, Math.sin(k * Math.PI / 3) * 12);
+    g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = "#FFE500"; g.beginPath(); g.arc(0, 0, 5, 0, 7); g.fill(); g.stroke();
+  } else { /* cubo com camadas de impressão */
+    g.fillRect(-10, -10, 20, 20); g.strokeRect(-10, -10, 20, 20); linhas(g, -9, -10, 18, 19, "#111");
+  }
+  g.restore();
+}
+function desenhaInimigo(g, tipo, x, t, dir) {
+  const y = CHAO - 30, pe = Math.sin(t / 6) * 3;
+  g.save(); g.translate(x, y);
+  if (tipo === "terno") {
+    g.fillStyle = "#111"; g.fillRect(9, 26 + pe * .2, 5, 4); g.fillRect(18, 26 - pe * .2, 5, 4);
+    g.fillRect(5, 10, 22, 17);
+    g.fillStyle = "#fff"; g.fillRect(13, 10, 6, 9); g.fillStyle = "#FF2E88"; g.fillRect(15, 10, 2, 11);
+    g.fillStyle = "#E8C9A8"; g.fillRect(8, 0, 16, 11); g.fillStyle = "#111"; g.fillRect(8, 0, 16, 3);
+    g.fillRect(dir > 0 ? 18 : 11, 5, 3, 3);
+    g.fillRect(dir > 0 ? 27 : -3, 16, 8, 9);
+  } else if (tipo === "tesoura") {
+    const ab = (Math.sin(t / 5) + 1) * .28 + .1;
+    g.translate(16, 20); g.scale(dir, 1); g.strokeStyle = "#111"; g.lineWidth = 5; g.lineCap = "round";
+    [ab, -ab].forEach(a => { g.save(); g.rotate(a); g.beginPath(); g.moveTo(-5, 0); g.lineTo(17, 0); g.stroke(); g.fillStyle = "#FFE500"; g.lineWidth = 3; g.beginPath(); g.arc(-11, 0, 6, 0, 7); g.fill(); g.stroke(); g.restore(); });
+    g.fillStyle = "#FF2E88"; g.beginPath(); g.arc(0, 0, 3, 0, 7); g.fill();
+  } else {
+    g.fillStyle = "#111"; g.fillRect(4, 25, 24, 5); g.fillRect(5, 6, 22, 20);
+    g.fillStyle = "#29D17D"; g.fillRect(9, 10, 14, 6);
+    g.fillStyle = "#111"; g.fillRect(dir > 0 ? 17 : 11, 11, 4, 4);
+    g.fillStyle = "#FF2E88"; g.fillRect(14, 0, 4, 6);
+    linhas(g, 7, 17, 18, 8, "#FFE500");
+  }
+  g.restore();
+}
+function desenhaJogador(g, p, t, pisca) {
+  if (pisca && Math.floor(t / 4) % 2) return;
+  const anda = p.chao && Math.abs(p.vx) > .5 ? Math.sin(t / 3) * 4 : 0;
+  g.save(); g.translate(p.x + P_L / 2, p.y); g.scale(p.face, 1); g.translate(-P_L / 2, 0);
+  g.fillStyle = "#111"; g.fillRect(4, 27, 6, 7 - Math.max(0, anda)); g.fillRect(12, 27, 6, 7 - Math.max(0, -anda));
+  if (!p.chao) { g.fillRect(2, 26, 7, 5); g.fillRect(13, 26, 7, 5); }
+  g.fillRect(3, 14, 16, 14);
+  g.fillStyle = "#FFE500"; g.fillRect(6, 15, 11, 12); g.fillStyle = "#111"; g.fillRect(9, 19, 5, 1); g.fillRect(9, 22, 5, 1);
+  g.fillStyle = "#111"; g.fillRect(17, 16 + anda * .4, 5, 4);
+  g.fillStyle = "#E8C9A8"; g.fillRect(4, 3, 14, 12);
+  g.fillStyle = "#FF2E88"; for (let i = 0; i < 4; i++) g.fillRect(3 + i * 3, -4 + (i % 2) * 2, 3, 8);
+  g.fillStyle = "#111"; g.fillRect(4, 6, 15, 2); g.fillStyle = "#29D17D"; g.fillRect(11, 5, 7, 4); g.strokeStyle = "#111"; g.lineWidth = 1; g.strokeRect(11, 5, 7, 4);
+  g.fillStyle = "#111"; g.fillRect(12, 12, 5, 1);
+  g.restore();
+}
+function desenhaCena(g, J2) {
+  const { L, p, t, cam, tema } = J2;
+  g.fillStyle = tema.papel; g.fillRect(0, 0, TELA_L, TELA_A);
+  /* cartazes colados na parede */
+  g.save(); g.textAlign = "center"; g.textBaseline = "middle";
+  const px = cam * .45;
+  for (let i = -1; i < (L.largura * .45 + TELA_L) / 300; i++) {
+    const x = 120 + i * 300 - px, y = 80 + (i % 2) * 34;
+    if (x < -180 || x > TELA_L + 180) continue;
+    const txt = tema.cartazes[((i % tema.cartazes.length) + tema.cartazes.length) % tema.cartazes.length];
+    g.save(); g.translate(x, y); g.rotate(i % 2 ? .05 : -.04);
+    g.font = '400 22px "Permanent Marker", cursive';
+    const lg = g.measureText(txt).width + 26;
+    g.fillStyle = "rgba(17,17,17,.09)"; g.fillRect(-lg / 2, -22, lg, 44);
+    g.fillStyle = "rgba(17,17,17,.3)"; g.fillText(txt, 0, 1); g.restore();
+  }
+  g.restore();
+  g.save(); g.translate(-Math.round(cam), 0);
+  for (const s of L.solidos) {
+    if (s.x > cam + TELA_L || s.x + s.w < cam) continue;
+    if (s.chao) {
+      g.fillStyle = "#111"; g.fillRect(s.x - .5, s.y, s.w + 1, s.h);
+      g.fillStyle = tema.bloco; g.fillRect(s.x - .5, s.y, s.w + 1, 5);
+      g.fillStyle = "rgba(244,244,239,.16)"; for (let i = 0; i < s.w; i += 22) g.fillRect(s.x + i, s.y + 14 + (i % 3) * 8, 10, 3);
+    } else {
+      g.fillStyle = tema.bloco; g.fillRect(s.x, s.y, s.w, s.h); linhas(g, s.x, s.y, s.w, s.h, "rgba(17,17,17,.45)");
+      g.strokeStyle = "#111"; g.lineWidth = 3; g.strokeRect(s.x, s.y, s.w, s.h);
+    }
+  }
+  for (const s of L.pregos) {
+    g.fillStyle = "#111";
+    for (let x = s.x; x < s.x + s.w - 1; x += 14) { g.beginPath(); g.moveTo(x, CHAO); g.lineTo(x + 7, CHAO - 16); g.lineTo(x + 14, CHAO); g.fill(); }
+    g.fillStyle = "#FF2E88";
+    for (let x = s.x; x < s.x + s.w - 1; x += 14) { g.beginPath(); g.moveTo(x + 4.5, CHAO - 10); g.lineTo(x + 7, CHAO - 16); g.lineTo(x + 9.5, CHAO - 10); g.fill(); }
+  }
+  for (const r of L.prensas) {
+    const y = yPrensa(r, t);
+    g.fillStyle = "#555"; g.fillRect(r.x + r.w / 2 - 6, 0, 12, y);
+    g.fillStyle = "#111"; g.fillRect(r.x, y - 24, r.w, 24);
+    g.fillStyle = "#FFE500"; for (let i = 0; i < r.w; i += 14) g.fillRect(r.x + i, y - 8, 7, 8);
+  }
+  for (const m of L.elevadores) {
+    const x = xElevador(m, t);
+    g.strokeStyle = "rgba(17,17,17,.3)"; g.setLineDash([6, 6]); g.lineWidth = 2; g.beginPath(); g.moveTo(m.x0, m.y + 7); g.lineTo(m.x1 + m.w, m.y + 7); g.stroke(); g.setLineDash([]);
+    g.fillStyle = tema.bloco; g.fillRect(x, m.y, m.w, 14); g.strokeStyle = "#111"; g.lineWidth = 3; g.strokeRect(x, m.y, m.w, 14);
+  }
+  const d = L.porta, tudo = L.pecas.every(q => q.pega);
+  g.fillStyle = tudo ? "#29D17D" : "#C9C9C4"; g.fillRect(d.x, d.y, d.w, d.h); g.strokeStyle = "#111"; g.lineWidth = 4; g.strokeRect(d.x, d.y, d.w, d.h);
+  g.fillStyle = "#111"; g.beginPath(); g.arc(d.x + d.w - 11, d.y + 38, 3, 0, 7); g.fill();
+  g.font = '400 13px "Bowlby One", Impact, sans-serif'; g.textAlign = "center"; g.fillText("OFICINA", d.x + d.w / 2, d.y - 8);
+  L.pecas.forEach((q, i) => { if (!q.pega) desenhaPeca(g, q.x, q.y, i, t); });
+  for (const e of L.inimigos) if (!e.morto) {
+    const dir = (t % (480 * DIF.ritmo)) < 240 * DIF.ritmo ? 1 : -1;
+    desenhaInimigo(g, tema.inimigo, xInimigo(e, t), t, dir);
+  }
+  desenhaJogador(g, p, t, J2.invul > 0);
+  for (const a of J2.avisos) {
+    g.font = '400 16px "Bowlby One", Impact, sans-serif'; g.textAlign = "center";
+    g.lineWidth = 4; g.strokeStyle = "#F4F4EF"; g.strokeText(a.txt, a.x, a.y); g.fillStyle = a.cor; g.fillText(a.txt, a.x, a.y);
+  }
+  g.restore();
+  /* placar */
+  const pegas = L.pecas.filter(q => q.pega).length;
+  g.fillStyle = "#111"; g.fillRect(0, 0, TELA_L, 30);
+  g.textBaseline = "middle"; g.textAlign = "left"; g.font = '400 14px "Bowlby One", Impact, sans-serif';
+  g.fillStyle = "#FFE500"; g.fillText("PEÇAS " + pegas + "/" + L.pecas.length, 12, 16);
+  g.fillStyle = "#F4F4EF"; g.textAlign = "center"; g.fillText(tudo ? "VÁ ATÉ A OFICINA" : J2.f.titulo.toUpperCase(), TELA_L / 2, 16);
+  g.textAlign = "right"; g.fillStyle = "#FFE500"; g.fillText(J2.pontos + " PTS", TELA_L - 12, 16);
+  g.textBaseline = "alphabetic";
+  if (t < 240 && J2.f.id === 1) {
+    g.fillStyle = "#111"; g.font = '400 18px "Permanent Marker", cursive'; g.textAlign = "center";
+    g.fillText("Corra, pule e pegue as peças!", TELA_L / 2, 62);
+  }
+}
+
+/* ---------- PARTIDA ---------- */
+const teclas = {};
+let partida = null;
+function pararJogo() { if (partida) { cancelAnimationFrame(partida.raf); partida = null; } }
+addEventListener("keydown", e => {
+  if (!partida) return;
+  if (partida.pausa) {
+    const n = +e.key;
+    if (n >= 1 && n <= 4) { const b = document.querySelectorAll(".modal .op:not(:disabled)")[n - 1]; if (b) b.click(); }
+    return;
+  }
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(e.key)) e.preventDefault();
+  teclas[e.key.toLowerCase()] = true;
+});
+addEventListener("keyup", e => { teclas[e.key.toLowerCase()] = false; });
+addEventListener("blur", () => { for (const k in teclas) teclas[k] = false; });
+
+function jogaFase(f) {
+  mostra(barra() + '<section class="palco"><div class="tela"><canvas id="c" width="640" height="360" aria-label="Fase ' + f.id + ': ' + f.titulo + '. Use as setas para andar e espaço para pular."></canvas></div>' +
+    '<div class="controles"><div class="linha"><button class="ctl" type="button" data-t="arrowleft" aria-label="Andar para a esquerda">◀</button><button class="ctl" type="button" data-t="arrowright" aria-label="Andar para a direita">▶</button></div><button class="ctl pulo" type="button" data-t=" " aria-label="Pular">PULA</button></div>' +
+    '<div class="linha" style="justify-content:space-between"><p class="etiqueta dica">Setas ou A e D andam. Espaço ou W pula. Pule em cima dos inimigos!</p><button class="bt" id="sair" type="button">Sair da fase</button></div></section>');
+  ligaBarra(() => telaLeitura(f));
+  document.getElementById("sair").onclick = telaMapa;
+  app.querySelectorAll(".ctl").forEach(b => {
+    const k = b.dataset.t;
+    b.addEventListener("pointerdown", e => { e.preventDefault(); teclas[k] = true; try { b.setPointerCapture(e.pointerId); } catch {} });
+    ["pointerup", "pointercancel"].forEach(ev => b.addEventListener(ev, () => { teclas[k] = false; }));
+    b.addEventListener("contextmenu", e => e.preventDefault());
+  });
+  const canvas = document.getElementById("c"), g = canvas.getContext("2d");
+  const L = criaNivel(f.id);
+  const itens = mistura(f.itens);
+  const P = partida = { f, L, itens, tema: TEMAS[f.id], p: novoJogador(60), t: 0, cam: 0, pontos: 0, seq: 0, marco: 60, invul: 0, avisos: [], pausa: false, feitas: 0, jAntes: false, raf: 0, ult: performance.now(), acum: 0, porta: 0 };
+  for (const k in teclas) teclas[k] = false;
+  function aviso(txt, cor, x, y) { P.avisos.push({ txt, cor, x, y, v: 50 }); }
+  function quadro() {
+    const j = !!(teclas[" "] || teclas.arrowup || teclas.w);
+    const ent = { e: !!(teclas.arrowleft || teclas.a), d: !!(teclas.arrowright || teclas.d), j, jp: j && !P.jAntes };
+    if (ent.jp && P.p.chao) bipPulo();
+    P.jAntes = j;
+    passo(P.p, ent, P.t, L); P.t++;
+    const p = P.p;
+    if (p.chao) for (const m of L.marcos) if (p.x >= m + 10 && m + 20 > P.marco) P.marco = m + 20;
+    const caixa = { x: p.x, y: p.y, w: P_L, h: P_A };
+    if (P.invul > 0) P.invul--;
+    for (const e of L.inimigos) if (!e.morto && p.vy > 0 && p.y + P_A < CHAO - 12 && toca(caixa, { x: xInimigo(e, P.t), y: CHAO - 30, w: 32, h: 30 })) {
+      e.morto = true; p.vy = -7.5; bip(true); aviso("TOMA!", "#B8004F", p.x, p.y - 8);
+    }
+    if (doeu(p, P.t, L) && (P.invul === 0 || p.y > TELA_A)) {
+      if (P.invul === 0) { P.pontos = Math.max(0, P.pontos - DIF.pena); bip(false); aviso("-" + DIF.pena, "#B8004F", p.x, p.y - 8); }
+      Object.assign(p, novoJogador(P.marco));
+      P.invul = 90;
+    }
+    for (const a of P.avisos) { a.v--; a.y -= .5; }
+    P.avisos = P.avisos.filter(a => a.v > 0);
+    for (const q of L.pecas) if (!q.pega && toca(caixa, { x: q.x - 15, y: q.y - 15, w: 30, h: 30 })) { q.pega = true; pergunta(q); break; }
+    if (P.porta > 0) P.porta--;
+    if (!P.pausa && toca(caixa, L.porta)) {
+      if (L.pecas.every(q => q.pega)) { pararJogo(); return telaResultado(f, P.pontos); }
+      if (!P.porta) { const n = L.pecas.filter(q => !q.pega).length; aviso("Faltam " + n + (n === 1 ? " peça" : " peças"), "#111", L.porta.x + 20, L.porta.y - 26); P.porta = 60; }
+    }
+    P.cam = Math.max(0, Math.min(L.largura - TELA_L, p.x - 240));
+  }
+  function laco(ag) {
+    if (partida !== P) return;
+    P.raf = requestAnimationFrame(laco);
+    P.acum = Math.min(P.acum + ag - P.ult, 100); P.ult = ag;
+    if (!P.pausa) while (P.acum >= 1000 / 60 && !P.pausa && partida === P) { quadro(); P.acum -= 1000 / 60; }
+    else P.acum = 0;
+    if (partida !== P) return;
+    const r = canvas.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2), lg = Math.round(r.width * dpr) || 640, al = Math.round(r.height * dpr) || 360;
+    if (canvas.width !== lg || canvas.height !== al) { canvas.width = lg; canvas.height = al; }
+    g.setTransform(lg / TELA_L, 0, 0, al / TELA_A, 0, 0);
+    desenhaCena(g, P);
+  }
+  function pergunta(q) {
+    P.pausa = true;
+    for (const k in teclas) teclas[k] = false;
+    const it = itens[P.feitas], num = ++P.feitas, restante = { v: DIF.tempo };
+    const ops = f.botoes ? f.botoes.map((t, k) => ({ t, k })) : mistura(it.o.map((t, k) => ({ t, k })));
+    const m = document.createElement("div");
+    m.className = "modal"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "Pergunta da peça " + num);
+    m.innerHTML = '<div class="folha"><div class="linha" style="justify-content:space-between"><p class="etiqueta">Peça ' + num + " de " + L.pecas.length + '</p><p class="etiqueta">' + P.pontos + " pts · Sequência: " + P.seq + '</p></div>' +
+      (f.tipo === "tempo" ? '<div class="tempo" role="timer" aria-label="Tempo restante"><div id="t" style="width:100%"></div></div>' : "") +
+      '<div class="cartao' + (f.botoes ? " com-carimbo" : "") + '" id="cartao"><p class="enunciado">' + it.q + '</p></div>' +
+      '<div class="opcoes' + (f.botoes ? " duas" : "") + '">' + ops.map(o => '<button class="op" type="button" data-k="' + o.k + '">' + o.t + "</button>").join("") + '</div><div id="r"></div></div>';
+    document.body.appendChild(m);
+    const prim = m.querySelector(".op"); if (prim) prim.focus({ preventScroll: true });
+    function responde(k) {
+      limpaTimer();
+      const ok = k === it.a; let ganho = 0;
+      if (ok) {
+        ganho = 100 + Math.min(P.seq * 10, 50); P.seq++;
+        if (f.tipo === "tempo") ganho += Math.round(50 * Math.max(0, restante.v) / DIF.tempo);
+      } else P.seq = 0;
+      P.pontos += ganho; bip(ok);
+      m.querySelectorAll(".op").forEach(b => {
+        const n = +b.dataset.k; b.disabled = true;
+        if (n === it.a) b.classList.add("certa"); else if (n === k) b.classList.add("errada"); else b.classList.add("apagada");
+      });
+      if (f.botoes) m.querySelector("#cartao").insertAdjacentHTML("beforeend", '<span class="carimbo ' + (ok ? "bom" : "ruim") + '">' + (ok ? "ACERTOU" : "ERROU") + "</span>");
+      m.querySelector("#r").innerHTML = '<div class="retorno"><p><b>' + (k === -1 ? "O tempo acabou." : ok ? "Peça perfeita! +" + ganho + " pontos." : "Peça com defeito: sem pontos.") + "</b> " + it.p + '</p><div class="linha fim"><button class="bt preto" id="prox" type="button">Continuar correndo</button></div></div>';
+      const b = m.querySelector("#prox"); b.focus({ preventScroll: true }); b.scrollIntoView({ block: "nearest" });
+      b.onclick = () => { m.remove(); if (document.activeElement) document.activeElement.blur(); P.pausa = false; P.ult = performance.now(); for (const k in teclas) teclas[k] = false; P.jAntes = true; };
+    }
+    m.querySelectorAll(".op").forEach(b => b.onclick = () => responde(+b.dataset.k));
+    if (f.tipo === "tempo") {
+      timer = setInterval(() => {
+        restante.v -= .25;
+        const bt = m.querySelector("#t"); if (bt) bt.style.width = Math.max(0, restante.v / DIF.tempo * 100) + "%";
+        if (restante.v <= 0) responde(-1);
+      }, 250);
+    }
+  }
+  P.raf = requestAnimationFrame(laco);
+}
+
+/* Impressora 3D montada aos poucos: uma parte por fase concluída. */
+function impressora() {
+  const c = i => passou(FASES[i]) ? "ganha" : "falta";
+  return '<svg class="impressora" viewBox="0 0 220 200" role="img" aria-label="Impressora 3D com ' + FASES.filter(passou).length + ' de 6 partes">' +
+    '<g class="' + c(0) + '"><rect x="24" y="14" width="10" height="170"/><rect x="186" y="14" width="10" height="170"/><rect x="24" y="14" width="172" height="10"/><rect x="14" y="176" width="192" height="12"/></g>' +
+    '<g class="' + c(1) + '"><rect x="34" y="62" width="152" height="6"/><rect x="60" y="24" width="5" height="152"/><rect x="155" y="24" width="5" height="152"/></g>' +
+    '<g class="' + c(2) + '"><rect x="52" y="142" width="116" height="10"/></g>' +
+    '<g class="' + c(3) + '"><rect x="96" y="54" width="28" height="24"/><path d="M104 78h12l-6 12z"/></g>' +
+    '<g class="' + c(4) + '"><circle cx="110" cy="8" r="0"/><path d="M198 40a14 14 0 1 0 .1 0zM110 54c0-18 40-26 76-16" /></g>' +
+    '<g class="' + c(5) + '"><rect x="130" y="162" width="46" height="12"/></g></svg>';
+}
+
+/* ---------- RESULTADO ---------- */
+function telaResultado(f, pts) {
+  const m = maxFase(f), recorde = pts > (J.melhor[f.id] || 0);
+  if (recorde) { J.melhor[f.id] = pts; salvar(); }
+  enviaPontos();
+  const ok = pts >= m * PONTOS_MIN_FASE, prox = FASES[f.id], tudo = FASES.every(passou);
+  mostra(barra() + '<section class="folha fita"><p class="etiqueta">Fase ' + f.id + " · " + f.titulo + '</p><p class="placar">' + pts + '<span style="font-size:.4em"> / ' + m + '</span></p>' +
+    '<p class="grandes" aria-label="' + estrelas(pts, m) + ' de 3 estrelas">' + desenhaEstrelas(estrelas(pts, m)) + '</p>' +
+    '<p class="rabisco">' + (recorde ? "Novo recorde nesta fase!" : "Seu recorde continua: " + J.melhor[f.id] + " pontos.") + '</p>' +
+    "<p>" + (ok ? "Fase concluída! Você ganhou esta parte da impressora: <b>" + PECAS_IMPRESSORA[f.id - 1] + "</b>. Repita quando quiser para buscar 3 estrelas." : "Você precisa de pelo menos " + Math.ceil(m * PONTOS_MIN_FASE) + " pontos para abrir a próxima fase. Releia a página e tente de novo.") + '</p>' +
+    '<div class="linha">' +
+    (tudo ? '<button class="bt quente" id="fim" type="button">Ver minha capa final</button>' : (ok && prox ? '<button class="bt quente" id="seg" type="button">Próxima fase</button>' : "")) +
+    '<button class="bt" id="rep" type="button">Jogar de novo</button><button class="bt" id="sum" type="button">Sumário</button></div></section>');
+  ligaBarra(() => telaResultado(f, pts));
+  document.getElementById("rep").onclick = () => telaLeitura(f);
+  document.getElementById("sum").onclick = telaMapa;
+  if (tudo) document.getElementById("fim").onclick = telaFinal;
+  else if (ok && prox) document.getElementById("seg").onclick = () => telaLeitura(prox);
+}
+
+/* ---------- RANKING: online com a função Netlify, local como reserva ---------- */
+function rankLocal(turma) {
+  const l = guarda.ler("fazai2:rank", []);
+  return l.filter(p => !turma || p.turma === turma);
+}
+function guardaLocal() {
+  const l = guarda.ler("fazai2:rank", []).filter(p => !(p.apelido.toLowerCase() === J.apelido.toLowerCase() && p.turma === J.turma));
+  l.push({ apelido: J.apelido, turma: J.turma, pontos: total(), nivel: nivelAtual });
+  guarda.por("fazai2:rank", l);
+}
+async function enviaPontos() {
+  guardaLocal();
+  try {
+    await fetch("/api/ranking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apelido: J.apelido, turma: J.turma, pontos: total(), nivel: nivelAtual }) });
+  } catch {}
+}
+async function buscaRanking(turma) {
+  try {
+    const r = await fetch("/api/ranking?turma=" + encodeURIComponent(turma), { cache: "no-store" });
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!Array.isArray(d.jogadores)) throw 0;
+    return { online: true, lista: d.jogadores };
+  } catch {
+    return { online: false, lista: rankLocal(turma) };
+  }
+}
+async function telaRanking(voltar) {
+  const temTurma = !!J.turma;
+  if (!temTurma) abaRank = "todas";
+  mostra(barra() + '<section class="folha fita"><div><p class="etiqueta">Quadro de honra</p><h2>Ranking</h2></div>' +
+    (temTurma ? '<div class="abas"><button type="button" data-a="turma" aria-pressed="' + (abaRank === "turma") + '">Turma ' + esc(J.turma) + '</button><button type="button" data-a="todas" aria-pressed="' + (abaRank === "todas") + '">Todas as turmas</button></div>' : "") +
+    '<div id="lista"><p class="etiqueta">Carregando…</p></div><div class="linha"><button class="bt" id="v" type="button">Voltar</button></div></section>');
+  ligaBarra(voltar);
+  document.getElementById("v").onclick = voltar;
+  app.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { abaRank = b.dataset.a; telaRanking(voltar); });
+  const { online, lista } = await buscaRanking(abaRank === "turma" ? J.turma : "");
+  const el = document.getElementById("lista"); if (!el) return;
+  const ord = lista.slice().sort((a, b) => b.pontos - a.pontos).slice(0, 20);
+  el.innerHTML = (ord.length ? '<ol class="tab">' + ord.map((p, i) => {
+    const eu = p.apelido.toLowerCase() === J.apelido.toLowerCase() && p.turma === J.turma;
+    return '<li class="' + (eu ? "eu" : "") + '"><span class="pos">' + (i + 1) + 'º</span><span class="nm">' + esc(p.apelido) + (p.turma && abaRank !== "turma" ? " <small>" + esc(p.turma) + "</small>" : "") + (DIFICULDADES[p.nivel] ? " <small>" + DIFICULDADES[p.nivel].nome + "</small>" : "") + '</span><span class="pt">' + p.pontos + "</span></li>";
+  }).join("") + "</ol>" : "<p>Ninguém pontuou ainda. Termine uma fase para aparecer aqui.</p>") +
+    '<p class="etiqueta" style="margin-top:10px">' + (online ? "Ranking online: atualiza para todos." : "Ranking deste aparelho: mostra só quem jogou aqui.") + "</p>";
+}
+
+/* ---------- CAPA FINAL ---------- */
+function telaFinal() {
+  const ptsTotal = total();
+  mostra(barra() + '<section class="folha fita"><p class="etiqueta">Fanzine Faz Aí! · Edição nº 1 · Capa de</p>' + recorte(J.apelido.toUpperCase(), true) +
+    '<p class="placar">' + ptsTotal + '<span style="font-size:.4em"> / ' + PONTOS_TOTAL + '</span></p>' +
+    impressora() + '<p class="rabisco">Impressora montada! Agora é sua vez de fazer.</p>' +
+    '<div class="leitura"><p>Você viu que a cultura maker juntou o “faça você mesmo” do punk, os clubes de computador, os Fab Labs, a revista Make: e a ideia de aprender construindo.</p>' +
+    '<p class="curiosidade"><b>Desafio para a sala maker:</b> crie um fanzine de uma folha contando um problema da sua escola e uma ideia para resolver. Use recorte, colagem e xerox, como em 1977.</p></div>' +
+    '<div class="linha"><button class="bt quente" id="r" type="button">Ver ranking</button><button class="bt" id="s" type="button">Sumário</button></div></section>');
+  ligaBarra(telaFinal);
+  document.getElementById("r").onclick = () => telaRanking(telaFinal);
+  document.getElementById("s").onclick = telaMapa;
+}
+
+telaInicio();
+</script>
+</body>
+</html>
